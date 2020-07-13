@@ -56,13 +56,13 @@ class clickButton
           {
             buttonState = reading;
       
-            if (buttonState == LOW) 
-            {
-              Keyboard.press(KEY_LEFT_CTRL); 
-              Keyboard.press(KEY_LEFT_ALT);         
-              Keyboard.press('z');
-              Keyboard.releaseAll();
-            }
+//            if (buttonState == LOW) 
+//            {
+//              Keyboard.press(KEY_LEFT_CTRL); 
+//              Keyboard.press(KEY_LEFT_ALT);         
+//              Keyboard.press('z');
+//              Keyboard.releaseAll();
+//            }
           }
         }
         
@@ -134,6 +134,15 @@ void setup(void)
 void loop()
 {
     topButton.UpdateButton();
+
+    if (topButton.buttonState == LOW) 
+    {
+      Keyboard.press(KEY_LEFT_CTRL); 
+      Keyboard.press(KEY_LEFT_ALT);         
+      Keyboard.press('z');
+      Keyboard.releaseAll();
+    }
+    
     middleButton.UpdateButton();
     bottomButton.UpdateButton();
 

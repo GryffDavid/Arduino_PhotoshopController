@@ -1,0 +1,9 @@
+Found Unknown controller LCD driver
+ID=0x9327
+Screen is 240x400
+Calibration is: 
+LEFT = 880 RT  = 170
+TOP  = 950 BOT = 180
+Wiring is: PORTRAIT
+YP=19 XM=20
+YM=7 XP=6

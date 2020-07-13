@@ -17,9 +17,8 @@
 #define DARK_GRAY 4359
 #define ALMOST_WHITE 52825
 
-#define MINPRESSURE 100
+#define MINPRESSURE 20
 #define MAXPRESSURE 1000
-#define SWAP(a, b) { uint16_t tmp = a; a = b; b = tmp; }
 
 TFTScreen myScreen;
 
@@ -36,7 +35,7 @@ class clickButton
   public:
     clickButton(int pin)
     {
-      buttonPin = pin;  
+        buttonPin = pin;  
     }
     
     int buttonPin;
@@ -57,14 +56,16 @@ enum PSInputMode { BrushSize, Zoom };
 PSInputMode CurrentPSInputMode;
 
 enum MenuState { MainMenu, PSMenu, YouTubeMenu };
+MenuState CurrentMenuState;
 
 void setup(void)
 {
+    CurrentMenuState = MainMenu;
     CurrentPSInputMode = BrushSize;
     
     Serial.begin(9600);
 
-    pinMode(12, OUTPUT);
+    pinMode(12, OUTPUT); //Buzzer pin
     pinMode(topButton.buttonPin, INPUT);    
     pinMode(middleButton.buttonPin, INPUT);
     pinMode(bottomButton.buttonPin, INPUT);
@@ -115,9 +116,9 @@ void setup(void)
       DARK_BLUE, "Brush Size"); //FONT COLOUR
 
     NewLayerButton.InitButton(&myScreen, 182, 16, 150, 80,
-    DARK_RED,
-    ALMOST_WHITE,
-    DARK_BLUE, "New Layer");
+      DARK_RED,
+      ALMOST_WHITE,
+      DARK_BLUE, "New Layer");
     
     NewLayerButton.DrawButton();  
     SwitchModeButton.DrawButton();
@@ -254,6 +255,17 @@ void loop()
         NewLayerButton.CheckButton(900, 900);
     }
 }
+
+void UpdateMainMenu()
+{
+    
+}
+
+void UpdatePhotoshopMenu()
+{
+    
+}
+
 
 bool UpdateTFTButton(TFTButton &tftButton)
 {

@@ -26,7 +26,8 @@ TFTScreen myScreen;
 TouchScreen ts = TouchScreen(6, A1, A2, 7, 300);
 TSPoint tp;
 
-TFTButton UndoButton;
+TFTButton SwitchModeButton;
+TFTButton NewLayerButton;
 
 uint16_t xpos, ypos;
 
@@ -108,12 +109,18 @@ void setup(void)
 
     myScreen.setFont(&FreeSans12pt7b);
     
-    UndoButton.InitButton(&myScreen, 16, 16, 150, 80, 
+    SwitchModeButton.InitButton(&myScreen, 16, 16, 150, 80, 
       DARK_RED,           //OUTLINE COLOUR
       ALMOST_WHITE,       //INTERNAL COLOUR
-      DARK_BLUE, "Undo"); //FONT COLOUR
-      
-    UndoButton.DrawButton();
+      DARK_BLUE, "Brush Size"); //FONT COLOUR
+
+    NewLayerButton.InitButton(&myScreen, 182, 16, 150, 80,
+    DARK_RED,
+    ALMOST_WHITE,
+    DARK_BLUE, "New Layer");
+    
+    NewLayerButton.DrawButton();  
+    SwitchModeButton.DrawButton();
       
     delay(500);
 }
@@ -121,32 +128,17 @@ void setup(void)
 void loop()
 {
     static int pos = 0;
+
+    //Top physical button
+    if (UpdatePhysicalButton(topButton) == true)
     {
-        int reading = digitalRead(topButton.buttonPin);
-        if (reading != topButton.lastButtonState) 
-        {
-          topButton.lastDebounceTime = millis();
-        }
-        
-        if ((millis() - topButton.lastDebounceTime) > topButton.debounceDelay) 
-        {
-          if (reading != topButton.buttonState) 
-          {
-            topButton.buttonState = reading;
-      
-            if (topButton.buttonState == LOW) 
-            {
-              Keyboard.press(KEY_LEFT_CTRL); 
-              Keyboard.press(KEY_LEFT_ALT);         
-              Keyboard.press('z');
-              Keyboard.releaseAll();
-            }
-          }
-        }
-        
-        topButton.lastButtonState = reading;
+        Keyboard.press(KEY_LEFT_CTRL); 
+        Keyboard.press(KEY_LEFT_ALT);         
+        Keyboard.press('z');
+        Keyboard.releaseAll();
     }
 
+    //Middle physical button
     if (digitalRead(middleButton.buttonPin) == 0)
     {
         Keyboard.press(' ');
@@ -155,151 +147,8 @@ void loop()
     {
         Keyboard.release(' ');
     }
- 
-    
 
-//    {
-//        int reading = digitalRead(middleButton.buttonPin);
-//        if (reading != middleButton.lastButtonState) 
-//        {
-//          middleButton.lastDebounceTime = millis();
-//        }
-//        
-//        if ((millis() - middleButton.lastDebounceTime) > middleButton.debounceDelay) 
-//        {
-//          if (reading != middleButton.buttonState) 
-//          {
-//            middleButton.buttonState = reading;
-//      
-//            if (middleButton.buttonState == LOW) 
-//            {
-//              Keyboard.press(KEY_LEFT_CTRL); 
-//              Keyboard.press(KEY_LEFT_ALT);         
-//              Keyboard.press('z');
-//              Keyboard.releaseAll();
-//            }
-//          }
-//        }
-//        
-//        middleButton.lastButtonState = reading;
-//    }
-
-//    {
-//        int reading = digitalRead(rotaryButton.buttonPin);
-//        if (reading != rotaryButton.lastButtonState) 
-//        {
-//          rotaryButton.lastDebounceTime = millis();
-//        }
-//        
-//        if ((millis() - rotaryButton.lastDebounceTime) > rotaryButton.debounceDelay) 
-//        {
-//          if (reading != rotaryButton.buttonState) 
-//          {
-//            rotaryButton.buttonState = reading;
-//      
-//            if (rotaryButton.buttonState == LOW) 
-//            {
-//              Keyboard.press(KEY_LEFT_CTRL); 
-//              Keyboard.press(KEY_LEFT_SHIFT);         
-//              Keyboard.press('n');
-//              Keyboard.press(KEY_RETURN);
-//              Keyboard.releaseAll();
-//            }
-//          }
-//        }
-//        
-//        rotaryButton.lastButtonState = reading;
-//    }
-
-    {
-        int reading = UndoButton.pressed;
-        if (reading != UndoButton.lastButtonState) 
-        {
-          UndoButton.lastDebounceTime = millis();
-        }
-        
-        if ((millis() - UndoButton.lastDebounceTime) > UndoButton.debounceDelay) 
-        {
-          if (reading != UndoButton.buttonState) 
-          {
-            UndoButton.buttonState = reading;
-      
-            if (UndoButton.buttonState == LOW) 
-            {
-              tone(12, 3500,5);
-              
-              switch(CurrentPSInputMode)
-              {
-                  case BrushSize:
-                  {
-                    CurrentPSInputMode = Zoom;
-                    UndoButton.ChangeLabel("Zoom");
-                  }
-                  break;
-
-                  case Zoom:
-                  {
-                    CurrentPSInputMode = BrushSize;
-                    UndoButton.ChangeLabel("Brush Size");
-                  }
-                  break;
-              }
-              
-              UndoButton.DrawButton();
-            }
-          }
-        }
-        
-        UndoButton.lastButtonState = reading;
-    }
-    
-    encoder.tick();
-    int newPos = encoder.getPosition();
-
-    switch(CurrentPSInputMode)
-    {
-        case BrushSize:
-        {
-            if (pos != newPos) 
-            {      
-              if (pos > newPos) { Keyboard.print("["); }
-              if (pos < newPos) { Keyboard.print("]"); }
-              
-              Serial.write("Hello");
-              
-              pos = newPos;
-            }
-        }
-        break;
-
-        case Zoom:
-        {
-          if (pos != newPos) 
-            {      
-              if (pos > newPos) 
-              { 
-                Keyboard.press(KEY_LEFT_ALT);
-                delay(16);
-                Mouse.move(0,0,-1);
-                delay(16);
-                Keyboard.release(KEY_LEFT_ALT);
-              }
-              
-              if (pos < newPos) 
-              { 
-                Keyboard.press(KEY_LEFT_ALT);
-                delay(16);
-                Mouse.move(0,0,1);
-                delay(16);
-                Keyboard.release(KEY_LEFT_ALT);
-              }
-              
-              pos = newPos;
-            }             
-        }
-        break;
-    }
-
+    //Bottom physical button
     if (digitalRead(bottomButton.buttonPin) == 0)
     {
         Keyboard.press(KEY_LEFT_ALT);
@@ -309,6 +158,84 @@ void loop()
         Keyboard.release(KEY_LEFT_ALT);
     }
 
+    //New Layer touch button
+    if (UpdateTFTButton(NewLayerButton) == true)
+    {
+        tone(12, 3500,5);
+        Keyboard.press(KEY_LEFT_CTRL); 
+        Keyboard.press(KEY_LEFT_SHIFT);         
+        Keyboard.press('n');
+        Keyboard.press(KEY_RETURN);
+        Keyboard.releaseAll();
+    }
+
+    //Switch Mode touch button
+    if (UpdateTFTButton(SwitchModeButton) == true)
+    {
+        tone(12, 500, 5);
+
+        switch(CurrentPSInputMode)
+        {
+            case BrushSize:
+            {
+              CurrentPSInputMode = Zoom;
+              SwitchModeButton.ChangeLabel("Zoom");
+            }
+            break;
+
+            case Zoom:
+            {
+              CurrentPSInputMode = BrushSize;
+              SwitchModeButton.ChangeLabel("Brush Size");
+            }
+            break;
+        }
+        
+        SwitchModeButton.DrawButton();      
+    }
+
+    //Rotary encoder
+    encoder.tick();
+    int newPos = encoder.getPosition();
+
+    if (pos != newPos) 
+    { 
+        switch(CurrentPSInputMode)
+        {
+            case BrushSize:
+            {                 
+                if (pos > newPos) { Keyboard.print("["); }
+                if (pos < newPos) { Keyboard.print("]"); }
+            }
+            break;
+    
+            case Zoom:
+            { 
+                if (pos > newPos) 
+                { 
+                  Keyboard.press(KEY_LEFT_ALT);
+                  delay(16);
+                  Mouse.move(0,0,-1);
+                  delay(16);
+                  Keyboard.release(KEY_LEFT_ALT);
+                }
+                
+                if (pos < newPos) 
+                { 
+                  Keyboard.press(KEY_LEFT_ALT);
+                  delay(16);
+                  Mouse.move(0,0,1);
+                  delay(16);
+                  Keyboard.release(KEY_LEFT_ALT);
+                }         
+            }
+            break;
+        }
+        
+        pos = newPos;
+    }
+
+    //Update touch screen
     tp = ts.getPoint();
     SetPins(); //This is necessary for the touch screen to work properly
 
@@ -318,12 +245,69 @@ void loop()
         xpos = map(tp.y, 950, 180, 0, myScreen.width());
         ypos = map(tp.x, 170, 880, 0, myScreen.height());
 
-        UndoButton.CheckButton(xpos, ypos);
+        SwitchModeButton.CheckButton(xpos, ypos);
+        NewLayerButton.CheckButton(xpos, ypos);
     }
     else
     {
-        UndoButton.CheckButton(900, 900);
+        SwitchModeButton.CheckButton(900, 900);
+        NewLayerButton.CheckButton(900, 900);
     }
+}
+
+bool UpdateTFTButton(TFTButton &tftButton)
+{
+    bool result = false;
+    int reading = tftButton.pressed;
+    
+    if (reading != tftButton.lastButtonState) 
+    {
+        tftButton.lastDebounceTime = millis();
+    }
+    
+    if ((millis() - tftButton.lastDebounceTime) > tftButton.debounceDelay) 
+    {
+      if (reading != tftButton.buttonState) 
+      {
+        tftButton.buttonState = reading;
+  
+        if (tftButton.buttonState == LOW) 
+        {
+            result = true;
+            Serial.println("True!");
+        }
+      }
+    }
+    
+    tftButton.lastButtonState = reading;
+    return result;
+}
+
+bool UpdatePhysicalButton(clickButton &button)
+{
+    int reading = digitalRead(button.buttonPin);
+    bool result = false;
+    
+    if (reading != button.lastButtonState) 
+    {
+      button.lastDebounceTime = millis();
+    }
+    
+    if ((millis() - button.lastDebounceTime) > button.debounceDelay) 
+    {
+      if (reading != button.buttonState) 
+      {
+        button.buttonState = reading;
+  
+        if (button.buttonState == LOW) 
+        {
+            result = true;
+        }
+      }
+    }
+        
+    button.lastButtonState = reading;
+    return result;
 }
 
 void SetPins()

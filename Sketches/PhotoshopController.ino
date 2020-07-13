@@ -56,13 +56,13 @@ class clickButton
           {
             buttonState = reading;
       
-//            if (buttonState == LOW) 
-//            {
-//              Keyboard.press(KEY_LEFT_CTRL); 
-//              Keyboard.press(KEY_LEFT_ALT);         
-//              Keyboard.press('z');
-//              Keyboard.releaseAll();
-//            }
+            if (buttonState == LOW) 
+            {
+              Keyboard.press(KEY_LEFT_CTRL); 
+              Keyboard.press(KEY_LEFT_ALT);         
+              Keyboard.press('z');
+              Keyboard.releaseAll();
+            }
           }
         }
         
@@ -73,6 +73,7 @@ class clickButton
 clickButton topButton(1);
 clickButton middleButton(2);
 clickButton bottomButton(3);
+clickButton rotaryButton(0);
 
 void setup(void)
 {
@@ -134,17 +135,9 @@ void setup(void)
 void loop()
 {
     topButton.UpdateButton();
-
-    if (topButton.buttonState == LOW) 
-    {
-      Keyboard.press(KEY_LEFT_CTRL); 
-      Keyboard.press(KEY_LEFT_ALT);         
-      Keyboard.press('z');
-      Keyboard.releaseAll();
-    }
-    
     middleButton.UpdateButton();
     bottomButton.UpdateButton();
+    rotaryButton.UpdateButton();
 
     tp = ts.getPoint();
     SetPins(); //This is necessary for the touch screen to work properly

@@ -3,28 +3,28 @@
 #include <Keyboard.h>
 #include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
-#include "Mouse.h"
+#include <Mouse.h>
 
-#define GREEN 1365
-#define ORANGE 64905
-#define LIGHT_RED 64076
-#define BLUE_GRAY 19151
-#define DARK_BLUE_GRAY 12812
+//#define GREEN 1365
+//#define ORANGE 64905
+//#define LIGHT_RED 64076
+//#define BLUE_GRAY 19151
+//#define DARK_BLUE_GRAY 12812
 #define DARK_BLUE 627
-#define BLUE 854
-#define DARK_RED 59753
+//#define BLUE 854
+//#define DARK_RED 59753
 #define LIGHT_BLUE 1599
-#define DARK_GRAY 4359
-#define ALMOST_WHITE 52825
+//#define DARK_GRAY 4359
+//#define ALMOST_WHITE 52825
+#define win10Col 986
 
 #define BLACK 0x0000
 #define WHITE 0xFFFF
-#define RED 0xF800
-#define GREEN 0x07E0
-#define YELLOW 0xFFE0
-#define LIME 0x07FF
-
-
+#define RED 63488
+//#define GREEN 0x07E0
+//#define YELLOW 0xFFE0
+//#define LIME 0x07FF
+#define VS_PURPLE 22898
 
 #define MINPRESSURE 20
 #define MAXPRESSURE 1000
@@ -43,8 +43,8 @@ class clickButton
     }
     
     int buttonPin;
-    int buttonState;
-    int lastButtonState;
+    bool buttonState;
+    bool lastButtonState;
     unsigned long lastDebounceTime = 0;
     unsigned long debounceDelay = 50;    
 };
@@ -72,7 +72,7 @@ RotaryEncoder encoder(A4, A5);
 enum PSInputMode { BrushSize, Zoom };
 PSInputMode CurrentPSInputMode;
 
-enum MenuState { MainMenu, PSMenu, WindowsMenu };
+enum MenuState { MainMenu, PSMenu, WindowsMenu, ChromeMenu, YouTubeMenu  };
 MenuState CurrentMenuState;
 
 enum BrushState { Brush, Eraser};
@@ -94,7 +94,7 @@ void setup(void)
     myScreen.setRotation(1);
 
     myScreen.fillScreen(GetColor(0,0,0));
-    myScreen.setFont(&FreeSans12pt7b);
+    myScreen. setFont(&FreeSans12pt7b);
 
     //PS Menu Buttons
     SwitchModeButton.InitButton(&myScreen, 16, 16, 150, 80, 
@@ -107,49 +107,43 @@ void setup(void)
       LIGHT_BLUE,
       WHITE, "New Layer");
 
-    ChangeBrushButton.InitButton(&myScreen, 16, 144 - 32, 150, 80,
+    ChangeBrushButton.InitButton(&myScreen, 16, 112, 150, 80,
       WHITE,
       LIGHT_BLUE,
       WHITE, "Brush"); 
 
-    MainMenuButton.InitButton(&myScreen, 16, 240 - 16 - 26 , 32, 26,
+    MainMenuButton.InitButton(&myScreen, 16, 198 , 32, 26,
       WHITE,
       LIGHT_BLUE,
       WHITE, "");
 
 
     //Main Menu Buttons
-    PhotoshopButton.InitButton(&myScreen, 16, 16, 64,64,
+    PhotoshopButton.InitButton(&myScreen, 8, 16, 64,64,
       LIGHT_BLUE,
       DARK_BLUE,
       LIGHT_BLUE,
       "Ps");
-   
-    uint16_t win10Col = GetColor(0, 120, 214);
 
-    WindowsButton.InitButton(&myScreen, 96, 16, 64, 64,
+    WindowsButton.InitButton(&myScreen, 88, 16, 64, 64,
     GetColor(255,255,255),
     win10Col,    
     win10Col,
     "");
 
-    ChromeButton.InitButton(&myScreen, 176, 16, 64,64,
+    ChromeButton.InitButton(&myScreen, 168, 16, 64,64,
       WHITE,
       GetColor(255, 223, 0),
       WHITE,
       "");
 
-    YouTubeButton.InitButton(&myScreen, 256, 16, 64,64,
-    RED,
-    WHITE,
-    WHITE,
-    "");
+    YouTubeButton.InitButton(&myScreen, 248, 16, 64,64,
+      RED,
+      WHITE,
+      WHITE,
+      "");
 
     DrawMainMenu();
-    
-
-    //NewLayerButton.DrawButton();
-    //SwitchModeButton.DrawButton();
       
     delay(500);
 }
@@ -158,6 +152,24 @@ void loop()
 {
     switch (CurrentMenuState)
     {
+        case ChromeMenu:
+        case WindowsMenu:
+        case PSMenu:
+        case YouTubeMenu:
+        {
+            if (UpdateTFTButton(MainMenuButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = MainMenu;
+
+                DrawMainMenu();
+            }
+        }
+        break;
+    }
+
+    switch (CurrentMenuState)
+    {      
         case MainMenu:
         {
             if (UpdateTFTButton(PhotoshopButton) == true)
@@ -175,42 +187,70 @@ void loop()
                 
                 DrawWindowsMenu();
             }
+
+            if (UpdateTFTButton(ChromeButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = ChromeMenu;
+                
+                DrawChromeMenu();
+            }
+
+            if (UpdateTFTButton(YouTubeButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = YouTubeMenu;
+                
+                DrawYouTubeMenu();
+            }
         }
         break;
 
+        case ChromeMenu:
+        {
+          
+        }
+        break;
+    
         case WindowsMenu:
         {
-            if (UpdateTFTButton(MainMenuButton) == true)
+            if (UpdatePhysicalButton(rotaryButton) == true)
             {
-                tone(12, 3500, 5);
-                CurrentMenuState = MainMenu;
-
-                DrawMainMenu();
+                Serial.println("Rotary Button Clicked");
+                Remote.mute();
+                Remote.clear();
             }
-
-//            if (UpdatePhysicalButton(rotaryButton) == true)
-//            {
-//                Remote.mute();
-//                Remote.clear();
-//            }
         }
         break;
       
         case PSMenu:
         {
             //Top physical button
-            if (UpdatePhysicalButton(topButton) == true)
+            if (digitalRead(middleButton.buttonPin) == 1)
             {
-                Keyboard.press(KEY_LEFT_CTRL); 
-                Keyboard.press(KEY_LEFT_ALT);         
-                Keyboard.press('z');
-                Keyboard.releaseAll();
+                if (UpdatePhysicalButton(topButton) == true)
+                {
+                    Keyboard.press(KEY_LEFT_CTRL); 
+                    Keyboard.press(KEY_LEFT_ALT);         
+                    Keyboard.press('z');
+                    Keyboard.releaseAll();
+                }
             }
         
             //Middle physical button
             if (digitalRead(middleButton.buttonPin) == 0)
             {
-                Keyboard.press(' ');
+                if (UpdatePhysicalButton(topButton) == true)
+                {
+                    Keyboard.press(KEY_LEFT_CTRL); 
+                    Keyboard.press(KEY_LEFT_SHIFT);         
+                    Keyboard.press('z');
+                    Keyboard.releaseAll();
+                }
+                else
+                {
+                    Keyboard.press(' ');
+                }
             }
             else
             {
@@ -225,17 +265,7 @@ void loop()
             else   
             {
                 Keyboard.release(KEY_LEFT_ALT);
-            }
-
-            //Main Menu touch button
-            if (UpdateTFTButton(MainMenuButton) == true)
-            {
-                tone(12, 3500, 5);
-                CurrentMenuState = MainMenu;
-
-                DrawMainMenu();
-            }
-            
+            }            
 
             //New Layer touch button
             if (UpdateTFTButton(NewLayerButton) == true)
@@ -381,6 +411,8 @@ void loop()
             {
                 PhotoshopButton.CheckButton(xpos, ypos);
                 WindowsButton.CheckButton(xpos, ypos);
+                ChromeButton.CheckButton(xpos, ypos);
+                YouTubeButton.CheckButton(xpos, ypos);
             }
             break;
           
@@ -388,41 +420,77 @@ void loop()
             {
                 SwitchModeButton.CheckButton(xpos, ypos);
                 NewLayerButton.CheckButton(xpos, ypos);
-                MainMenuButton.CheckButton(xpos, ypos);
                 ChangeBrushButton.CheckButton(xpos, ypos);                
             }
             break;
 
             case WindowsMenu:
             {
-                MainMenuButton.CheckButton(xpos, ypos); 
+              
             }
             break;
-        }        
+
+            case ChromeMenu:
+            {
+              
+            }
+            break;
+        }
+
+        switch (CurrentMenuState)
+        {
+            case PSMenu:
+            case WindowsMenu:
+            case ChromeMenu:
+            case YouTubeMenu:
+            {
+                MainMenuButton.CheckButton(xpos, ypos);
+            }
+            break;
+        }
     }
     else
     {
+        switch (CurrentMenuState)
+        {
+            case PSMenu:
+            case WindowsMenu:
+            case ChromeMenu:
+            case YouTubeMenu:
+            {
+                MainMenuButton.CheckButton(900, 900);
+            }
+            break;
+        }
+      
         switch (CurrentMenuState)
         {
             case MainMenu:
             {
                 PhotoshopButton.CheckButton(900, 900);
                 WindowsButton.CheckButton(900, 900);
+                ChromeButton.CheckButton(900, 900);
+                YouTubeButton.CheckButton(900, 900);
             }
             break;
           
             case PSMenu:
             {
                 SwitchModeButton.CheckButton(900, 900);
-                NewLayerButton.CheckButton(900, 900);
-                MainMenuButton.CheckButton(900, 900);   
+                NewLayerButton.CheckButton(900, 900); 
                 ChangeBrushButton.CheckButton(900, 900);             
             }
             break;
 
             case WindowsMenu:
             {
-                MainMenuButton.CheckButton(900, 900); 
+              
+            }
+            break;
+
+            case ChromeMenu:
+            {
+                
             }
             break;
         }
@@ -448,7 +516,6 @@ bool UpdateTFTButton(TFTButton &tftButton)
         if (tftButton.buttonState == LOW) 
         {
             result = true;
-            Serial.println("True!");
         }
       }
     }
@@ -499,37 +566,48 @@ uint16_t GetColor(uint8_t r, uint8_t g, uint8_t b)
 
 void DrawMainMenu()
 {
-    myScreen.fillScreen(GetColor(0,0,0));
+    myScreen.fillScreen(BLACK);
   
     WindowsButton.DrawButton();
     PhotoshopButton.DrawButton();
     ChromeButton.DrawButton();
     YouTubeButton.DrawButton();
   
-    DrawWindowsLogo(16, 96);
-    DrawChromeLogo(176, 16);
-    DrawYouTubeLogo(256, 16);
-
-    
+    DrawWindowsLogo(16, 88);
+    DrawChromeLogo(168, 16);
+    DrawYouTubeLogo(246, 16);
+    DrawVSLogo(328, 16);
 }
 
 void DrawPSMenu()
 {
-    myScreen.fillScreen(GetColor(0,0,0));
+    myScreen.fillScreen(BLACK);
     NewLayerButton.DrawButton();
     SwitchModeButton.DrawButton();
     ChangeBrushButton.DrawButton();
     
-    //MainMenuButton.DrawButton();
-    DrawHamburger(16, 240 - 16 - 26);
+    DrawHamburger(16, 198);
 }
 
 void DrawWindowsMenu()
 {
-    myScreen.fillScreen(GetColor(0,0,0));
+    myScreen.fillScreen(BLACK);
     
-    //MainMenuButton.DrawButton();
-    DrawHamburger(16, 240 - 16 - 26);
+    DrawHamburger(16, 198);
+}
+
+void DrawChromeMenu()
+{
+    myScreen.fillScreen(BLACK);
+    
+    DrawHamburger(16, 198);
+}
+
+void DrawYouTubeMenu()
+{
+    myScreen.fillScreen(BLACK);
+
+    DrawHamburger(16, 198);
 }
 
 void DrawHamburger(int x, int y)
@@ -542,8 +620,8 @@ void DrawHamburger(int x, int y)
 void DrawWindowsLogo(int x, int y)
 {
         //Top left rectangle
-      myScreen.fillTriangle(y+ 10, x+ 15, y+ 10, x+ 30, y+ 28, x+ 13, GetColor(255,255,255));
-      myScreen.fillTriangle(y+ 28, x+ 13, y+ 10, x+ 30, y+ 28, x+ 30, GetColor(255,255,255));
+      myScreen.fillTriangle(y + 10, x + 15, y + 10, x + 30, y + 28, x + 13, GetColor(255,255,255));
+      myScreen.fillTriangle(y + 28, x + 13, y + 10, x + 30, y + 28, x + 30, GetColor(255,255,255));
 
       //Top right rectangle
       myScreen.fillTriangle(
@@ -629,6 +707,65 @@ void DrawChromeLogo(int x, int y)
 void DrawYouTubeLogo(int x, int y)
 {
     myScreen.fillRoundRect(x + 10, y + 17, 48, 32, 3, RED);
-    myScreen.fillTriangle(x + 27, y + 25, x + 27, y + 38, x +  39, y + 32, WHITE);
+    myScreen.fillTriangle(
+      x + 27, y + 25, 
+      x + 27, y + 38, 
+      x +  39, y + 32, 
+      WHITE);
+}
+
+void DrawVSLogo(int x, int y)
+{
+    myScreen.drawRect(x, y, 64, 64, VS_PURPLE);
+    myScreen.fillRect(x+1, y+1, 62, 62, WHITE);
+    myScreen.fillRect(x+10, y+11, 43, 42, VS_PURPLE);    
+    
+    myScreen.fillTriangle(
+    x+2, y+2, 
+    x + 11, y + 22, 
+    x + 41, y + 11,     
+    WHITE);
+    
+    myScreen.fillTriangle(
+    x + 10, y + 43, 
+    x + 10, y + 53, 
+    x + 41, y + 53,     
+    WHITE);
+    
+    myScreen.fillTriangle(
+    x + 16, y + 20, 
+    x + 25, y + 28, 
+    x + 42, y + 11,     
+    WHITE);
+    
+    myScreen.fillTriangle(
+    x + 16, y + 28, 
+    x + 16, y + 37, 
+    x + 21, y + 32,     
+    WHITE);
+
+    myScreen.fillTriangle(
+    x + 32, y + 32, 
+    x + 42, y + 25, 
+    x + 42, y + 41,     
+    WHITE);
+
+    myScreen.fillTriangle(
+    x + 25, y + 37, 
+    x + 16, y + 45, 
+    x + 42, y + 53,     
+    WHITE);
+
+    myScreen.fillTriangle(
+    x + 44, y + 11, 
+    x + 53, y + 11, 
+    x + 53, y + 16,     
+    WHITE);
+
+    myScreen.fillTriangle(
+    x + 53, y + 49, 
+    x + 53, y + 53, 
+    x + 45, y + 53,     
+    WHITE);
 }
 

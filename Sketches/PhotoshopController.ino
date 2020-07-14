@@ -329,13 +329,11 @@ void loop()
 
         switch (CurrentMenuState)
         {
-            case MainMenu:
-            {
-                PhotoshopBtn.CheckButton(xpos, ypos);
-                WindowsBtn.CheckButton(xpos, ypos);
-                ChromeBtn.CheckButton(xpos, ypos);
-                YouTubeBtn.CheckButton(xpos, ypos);
-            }
+            case MainMenu:            
+              for (byte i = 0; i < 5; i++)
+              {
+                  MMBtns[i].CheckButton(xpos, ypos);
+              }            
             break;
           
             case PSMenu:
@@ -387,13 +385,11 @@ void loop()
       
         switch (CurrentMenuState)
         {
-            case MainMenu:
-            {
-                PhotoshopBtn.CheckButton(-1, -1);
-                WindowsBtn.CheckButton(-1, -1);
-                ChromeBtn.CheckButton(-1, -1);
-                YouTubeBtn.CheckButton(-1, -1);
-            }
+            case MainMenu:            
+              for (byte i = 0; i < 5; i++)
+              {
+                  MMBtns[i].CheckButton(-1,-1);
+              }            
             break;
           
             case PSMenu:
@@ -470,7 +466,7 @@ void SetPins()
 void DrawMainMenu()
 {
     myScreen.fillScreen(BLACK);
-  
+
     WindowsBtn.DrawButton();
     PhotoshopBtn.DrawButton();
     ChromeBtn.DrawButton();

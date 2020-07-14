@@ -5,25 +5,12 @@
 #include <RotaryEncoder.h>
 #include <Mouse.h>
 
-//#define GREEN 1365
-//#define ORANGE 64905
-//#define LIGHT_RED 64076
-//#define BLUE_GRAY 19151
-//#define DARK_BLUE_GRAY 12812
 #define DARK_BLUE 627
-//#define BLUE 854
-//#define DARK_RED 59753
 #define LIGHT_BLUE 1599
-//#define DARK_GRAY 4359
-//#define ALMOST_WHITE 52825
 #define win10Col 986
-
 #define BLACK 0x0000
 #define WHITE 0xFFFF
 #define RED 63488
-//#define GREEN 0x07E0
-//#define YELLOW 0xFFE0
-//#define LIME 0x07FF
 #define VS_PURPLE 22898
 
 #define MINPRESSURE 20
@@ -34,10 +21,10 @@ TouchScreen ts = TouchScreen(6, A1, A2, 7, 300);
 TSPoint tp;
 uint16_t xpos, ypos;
 
-class clickButton
+class cBut
 {
   public:
-    clickButton(int pin)
+    cBut(int pin)
     {
         buttonPin = pin;  
     }
@@ -50,10 +37,10 @@ class clickButton
 };
 
 //Physical buttons
-clickButton topButton(1);
-clickButton middleButton(3);
-clickButton bottomButton(2);
-clickButton rotaryButton(0);
+cBut topButton(1);
+cBut middleButton(3);
+cBut bottomButton(2);
+cBut rotaryButton(0);
 
 //PS Menu Buttons
 TFTButton MainMenuButton;
@@ -92,64 +79,29 @@ void setup(void)
     
     myScreen.begin(37671);
     myScreen.setRotation(1);
-
-    myScreen.fillScreen(GetColor(0,0,0));
+    myScreen.fillScreen(BLACK);
     myScreen. setFont(&FreeSans12pt7b);
-
+    
+    MainMenuButton.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");  
+    
     //PS Menu Buttons
-    SwitchModeButton.InitButton(&myScreen, 16, 16, 150, 80, 
-      WHITE,           //OUTLINE COLOUR
-      LIGHT_BLUE,       //INTERNAL COLOUR
-      WHITE, "Brush Size"); //FONT COLOUR
-
-    NewLayerButton.InitButton(&myScreen, 182, 16, 150, 80,
-      WHITE,
-      LIGHT_BLUE,
-      WHITE, "New Layer");
-
-    ChangeBrushButton.InitButton(&myScreen, 16, 112, 150, 80,
-      WHITE,
-      LIGHT_BLUE,
-      WHITE, "Brush"); 
-
-    MainMenuButton.InitButton(&myScreen, 16, 198 , 32, 26,
-      WHITE,
-      LIGHT_BLUE,
-      WHITE, "");
-
-
+    SwitchModeButton.InitButton(&myScreen, 16, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
+    NewLayerButton.InitButton(&myScreen, 182, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "New Layer");
+    ChangeBrushButton.InitButton(&myScreen, 16, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush");      
+    
     //Main Menu Buttons
-    PhotoshopButton.InitButton(&myScreen, 8, 16, 64,64,
-      LIGHT_BLUE,
-      DARK_BLUE,
-      LIGHT_BLUE,
-      "Ps");
+    PhotoshopButton.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
+    WindowsButton.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
+    ChromeButton.InitButton(&myScreen, 168, 16, 64, 64, WHITE, GetColor(255, 223, 0), WHITE, "");
+    YouTubeButton.InitButton(&myScreen, 248, 16, 64, 64, RED, WHITE, WHITE, "");
 
-    WindowsButton.InitButton(&myScreen, 88, 16, 64, 64,
-    GetColor(255,255,255),
-    win10Col,    
-    win10Col,
-    "");
-
-    ChromeButton.InitButton(&myScreen, 168, 16, 64,64,
-      WHITE,
-      GetColor(255, 223, 0),
-      WHITE,
-      "");
-
-    YouTubeButton.InitButton(&myScreen, 248, 16, 64,64,
-      RED,
-      WHITE,
-      WHITE,
-      "");
-
-    DrawMainMenu();
-      
+    DrawMainMenu();      
     delay(500);
 }
 
 void loop()
 {
+    //Handle Main Menu Button on submenus
     switch (CurrentMenuState)
     {
         case ChromeMenu:
@@ -205,7 +157,7 @@ void loop()
             }
         }
         break;
-
+        
         case ChromeMenu:
         {
           
@@ -216,7 +168,6 @@ void loop()
         {
             if (UpdatePhysicalButton(rotaryButton) == true)
             {
-                Serial.println("Rotary Button Clicked");
                 Remote.mute();
                 Remote.clear();
             }
@@ -458,7 +409,7 @@ void loop()
             case ChromeMenu:
             case YouTubeMenu:
             {
-                MainMenuButton.CheckButton(900, 900);
+                MainMenuButton.CheckButton(-1, -1);
             }
             break;
         }
@@ -467,18 +418,18 @@ void loop()
         {
             case MainMenu:
             {
-                PhotoshopButton.CheckButton(900, 900);
-                WindowsButton.CheckButton(900, 900);
-                ChromeButton.CheckButton(900, 900);
-                YouTubeButton.CheckButton(900, 900);
+                PhotoshopButton.CheckButton(-1, -1);
+                WindowsButton.CheckButton(-1, -1);
+                ChromeButton.CheckButton(-1, -1);
+                YouTubeButton.CheckButton(-1, -1);
             }
             break;
           
             case PSMenu:
             {
-                SwitchModeButton.CheckButton(900, 900);
-                NewLayerButton.CheckButton(900, 900); 
-                ChangeBrushButton.CheckButton(900, 900);             
+                SwitchModeButton.CheckButton(-1, -1);
+                NewLayerButton.CheckButton(-1, -1); 
+                ChangeBrushButton.CheckButton(-1, -1);             
             }
             break;
 
@@ -499,24 +450,17 @@ void loop()
 
 bool UpdateTFTButton(TFTButton &tftButton)
 {
-    bool result = false;
     int reading = tftButton.pressed;
+    bool result = false;
     
-    if (reading != tftButton.lastButtonState) 
-    {
-        tftButton.lastDebounceTime = millis();
-    }
+    if (reading != tftButton.lastButtonState) { tftButton.lastDebounceTime = millis(); }
     
     if ((millis() - tftButton.lastDebounceTime) > tftButton.debounceDelay) 
     {
       if (reading != tftButton.buttonState) 
       {
-        tftButton.buttonState = reading;
-  
-        if (tftButton.buttonState == LOW) 
-        {
-            result = true;
-        }
+        tftButton.buttonState = reading;  
+        if (tftButton.buttonState == LOW) { result = true; }
       }
     }
     
@@ -524,26 +468,19 @@ bool UpdateTFTButton(TFTButton &tftButton)
     return result;
 }
 
-bool UpdatePhysicalButton(clickButton &button)
+bool UpdatePhysicalButton(cBut &button)
 {
     int reading = digitalRead(button.buttonPin);
     bool result = false;
     
-    if (reading != button.lastButtonState) 
-    {
-      button.lastDebounceTime = millis();
-    }
+    if (reading != button.lastButtonState) { button.lastDebounceTime = millis(); }
     
     if ((millis() - button.lastDebounceTime) > button.debounceDelay) 
     {
       if (reading != button.buttonState) 
       {
-        button.buttonState = reading;
-  
-        if (button.buttonState == LOW) 
-        {
-            result = true;
-        }
+        button.buttonState = reading;  
+        if (button.buttonState == LOW) { result = true; }
       }
     }
         
@@ -584,29 +521,25 @@ void DrawPSMenu()
     myScreen.fillScreen(BLACK);
     NewLayerButton.DrawButton();
     SwitchModeButton.DrawButton();
-    ChangeBrushButton.DrawButton();
-    
+    ChangeBrushButton.DrawButton();    
     DrawHamburger(16, 198);
 }
 
 void DrawWindowsMenu()
 {
-    myScreen.fillScreen(BLACK);
-    
+    myScreen.fillScreen(BLACK);    
     DrawHamburger(16, 198);
 }
 
 void DrawChromeMenu()
 {
-    myScreen.fillScreen(BLACK);
-    
+    myScreen.fillScreen(BLACK);    
     DrawHamburger(16, 198);
 }
 
 void DrawYouTubeMenu()
 {
     myScreen.fillScreen(BLACK);
-
     DrawHamburger(16, 198);
 }
 
@@ -620,152 +553,51 @@ void DrawHamburger(int x, int y)
 void DrawWindowsLogo(int x, int y)
 {
         //Top left rectangle
-      myScreen.fillTriangle(y + 10, x + 15, y + 10, x + 30, y + 28, x + 13, GetColor(255,255,255));
-      myScreen.fillTriangle(y + 28, x + 13, y + 10, x + 30, y + 28, x + 30, GetColor(255,255,255));
+      myScreen.fillTriangle(y + 10, x + 15, y + 10, x + 30, y + 28, x + 13, WHITE);
+      myScreen.fillTriangle(y + 28, x + 13, y + 10, x + 30, y + 28, x + 30, WHITE);
 
       //Top right rectangle
-      myScreen.fillTriangle(
-      y+ 31, 
-      x+ 12,
-       
-      y+ 31, 
-      x+ 30,
-      
-      y+ 54, 
-      x+ 9, 
-      GetColor(255,255,255));
-      
-      myScreen.fillTriangle(
-      y+ 54, 
-      x+ 9,
-       
-      y+ 54, 
-      x+ 30,
-       
-      y+ 31, 
-      x+ 30, 
-      GetColor(255,255,255));
+      myScreen.fillTriangle(y + 31, x + 12, y + 31, x + 30, y + 54, x + 9, WHITE);      
+      myScreen.fillTriangle(y + 54, x + 9, y + 54, x + 30, y + 31, x + 30, WHITE);
 
       //Bottom left rectangle
-      myScreen.fillTriangle(
-      y+ 10, 
-      x+ 33,
-       
-      y+ 10, 
-      x+ 48,
-      
-      y+ 28, 
-      x+ 33, 
-      GetColor(255,255,255));
-      
-      myScreen.fillTriangle(
-      y+ 28, 
-      x+ 33,
-       
-      y+ 10, 
-      x+ 48,
-       
-      y+ 28, 
-      x+ 51, 
-      GetColor(255,255,255));
+      myScreen.fillTriangle(y + 10, x + 33, y + 10, x + 48, y + 28, x + 33, WHITE);      
+      myScreen.fillTriangle(y + 28, x + 33, y + 10, x + 48, y + 28, x + 51, WHITE);
 
       //Bottom right rectangle
-      myScreen.fillTriangle(
-      y+ 31, 
-      x+ 33,
-       
-      y+ 54, 
-      x+ 33,
-      
-      y+ 31, 
-      x+ 51, 
-      GetColor(255,255,255));
-      
-      myScreen.fillTriangle(
-      y+ 54, 
-      x+ 33,
-       
-      y+ 31, 
-      x+ 51,
-       
-      y+ 54, 
-      x+ 54, 
-      GetColor(255,255,255));
+      myScreen.fillTriangle(y + 31, x + 33, y + 54, x + 33, y + 31, x + 51, WHITE);      
+      myScreen.fillTriangle(y + 54, x + 33, y + 31, x + 51, y + 54, x + 54, WHITE);
 }
 
 void DrawChromeLogo(int x, int y)
 {
-    myScreen.fillCircle(x+32, y+32, 23, WHITE);
-    myScreen.drawCircle(x+32, y+32, 10, BLACK);
-    myScreen.drawCircle(x+32, y+32, 24, BLACK);
+    myScreen.fillCircle(x + 32, y + 32, 23, WHITE);
+    myScreen.drawCircle(x + 32, y + 32, 10, BLACK);
+    myScreen.drawCircle(x + 32, y + 32, 24, BLACK);
 
-    myScreen.drawLine(x+13, y+19, x+23, y+35, BLACK);
-    myScreen.drawLine(x+31, y+22, x+53, y+22, BLACK);
-    myScreen.drawLine(x+39, y+39, x+31, y+55, BLACK);
+    myScreen.drawLine(x + 13, y + 19, x + 23, y + 35, BLACK);
+    myScreen.drawLine(x + 31, y + 22, x + 53, y + 22, BLACK);
+    myScreen.drawLine(x + 39, y + 39, x + 31, y + 55, BLACK);
 }
 
 void DrawYouTubeLogo(int x, int y)
 {
     myScreen.fillRoundRect(x + 10, y + 17, 48, 32, 3, RED);
-    myScreen.fillTriangle(
-      x + 27, y + 25, 
-      x + 27, y + 38, 
-      x +  39, y + 32, 
-      WHITE);
+    myScreen.fillTriangle(x + 27, y + 25, x + 27, y + 38, x +  39, y + 32, WHITE);
 }
 
 void DrawVSLogo(int x, int y)
 {
     myScreen.drawRect(x, y, 64, 64, VS_PURPLE);
-    myScreen.fillRect(x+1, y+1, 62, 62, WHITE);
-    myScreen.fillRect(x+10, y+11, 43, 42, VS_PURPLE);    
-    
-    myScreen.fillTriangle(
-    x+2, y+2, 
-    x + 11, y + 22, 
-    x + 41, y + 11,     
-    WHITE);
-    
-    myScreen.fillTriangle(
-    x + 10, y + 43, 
-    x + 10, y + 53, 
-    x + 41, y + 53,     
-    WHITE);
-    
-    myScreen.fillTriangle(
-    x + 16, y + 20, 
-    x + 25, y + 28, 
-    x + 42, y + 11,     
-    WHITE);
-    
-    myScreen.fillTriangle(
-    x + 16, y + 28, 
-    x + 16, y + 37, 
-    x + 21, y + 32,     
-    WHITE);
-
-    myScreen.fillTriangle(
-    x + 32, y + 32, 
-    x + 42, y + 25, 
-    x + 42, y + 41,     
-    WHITE);
-
-    myScreen.fillTriangle(
-    x + 25, y + 37, 
-    x + 16, y + 45, 
-    x + 42, y + 53,     
-    WHITE);
-
-    myScreen.fillTriangle(
-    x + 44, y + 11, 
-    x + 53, y + 11, 
-    x + 53, y + 16,     
-    WHITE);
-
-    myScreen.fillTriangle(
-    x + 53, y + 49, 
-    x + 53, y + 53, 
-    x + 45, y + 53,     
-    WHITE);
+    myScreen.fillRect(x + 1, y + 1, 62, 62, WHITE);
+    myScreen.fillRect(x + 10, y + 11, 43, 42, VS_PURPLE);    
+    myScreen.fillTriangle(x + 2, y + 2, x + 11, y + 22, x + 41, y + 11, WHITE);
+    myScreen.fillTriangle(x + 10, y + 43, x + 10, y + 53, x + 41, y + 53, WHITE);
+    myScreen.fillTriangle(x + 16, y + 20, x + 25, y + 28, x + 42, y + 11, WHITE);
+    myScreen.fillTriangle(x + 16, y + 28, x + 16, y + 37, x + 21, y + 32, WHITE);
+    myScreen.fillTriangle(x + 32, y + 32, x + 42, y + 25, x + 42, y + 41, WHITE);
+    myScreen.fillTriangle(x + 25, y + 37, x + 16, y + 45, x + 42, y + 53, WHITE);
+    myScreen.fillTriangle(x + 44, y + 11, x + 53, y + 11, x + 53, y + 16, WHITE);
+    myScreen.fillTriangle(x + 53, y + 49, x + 53, y + 53, x + 45, y + 53, WHITE);
 }
 

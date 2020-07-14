@@ -25,10 +25,7 @@ uint16_t xpos, ypos;
 class cBtn
 {
   public:
-    cBtn(int pin)
-    {
-        buttonPin = pin;  
-    }
+    cBtn(int pin) { buttonPin = pin; }
     
     int buttonPin;
     bool buttonState;
@@ -54,6 +51,8 @@ TFTButton PhotoshopBtn;
 TFTButton WindowsBtn;
 TFTButton ChromeBtn;
 TFTButton YouTubeBtn;
+
+TFTButton MMBtns[5];
 
 RotaryEncoder encoder(A4, A5);
 
@@ -96,6 +95,11 @@ void setup(void)
     ChromeBtn.InitButton(&myScreen, 168, 16, 64, 64, WHITE, CRM_YEL, WHITE, "");
     YouTubeBtn.InitButton(&myScreen, 248, 16, 64, 64, RED, WHITE, WHITE, "");
 
+    MMBtns[0] = PhotoshopBtn;
+    MMBtns[1] = WindowsBtn;
+    MMBtns[2] = ChromeBtn;
+    MMBtns[3] = YouTubeBtn;
+    
     DrawMainMenu();      
     delay(500);
 }
@@ -124,36 +128,35 @@ void loop()
     {      
         case MainMenu:
         {
-            if (UpdateTFTBtn(PhotoshopBtn) == true)
+            for (byte i = 0; i < 5; i++)
             {
-                tone(12, 3500, 5);
-                CurrentMenuState = PSMenu;
+                if (UpdateTFTBtn(MMBtns[i]) == true)
+                {
+                    tone(12, 3500, 5);
 
-                DrawPSMenu();
-            }
+                    switch (i)
+                    {
+                      case 0:
+                        CurrentMenuState = PSMenu;
+                        DrawPSMenu();
+                      break;
 
-            if (UpdateTFTBtn(WindowsBtn) == true)
-            {
-                tone(12, 3500, 5);
-                CurrentMenuState = WindowsMenu;
-                
-                DrawWindowsMenu();
-            }
+                      case 1:
+                        CurrentMenuState = WindowsMenu;
+                        DrawWindowsMenu();
+                      break;
 
-            if (UpdateTFTBtn(ChromeBtn) == true)
-            {
-                tone(12, 3500, 5);
-                CurrentMenuState = ChromeMenu;
-                
-                DrawChromeMenu();
-            }
+                      case 2:
+                        CurrentMenuState = ChromeMenu;
+                        DrawChromeMenu();
+                      break;
 
-            if (UpdateTFTBtn(YouTubeBtn) == true)
-            {
-                tone(12, 3500, 5);
-                CurrentMenuState = YouTubeMenu;
-                
-                DrawYouTubeMenu();
+                      case 3:
+                        CurrentMenuState = YouTubeMenu;
+                        DrawYouTubeMenu();
+                      break;
+                    }
+                }
             }
         }
         break;

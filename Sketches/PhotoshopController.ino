@@ -21,13 +21,8 @@
 #define MAXPRESSURE 1000
 
 TFTScreen myScreen;
-
 TouchScreen ts = TouchScreen(6, A1, A2, 7, 300);
 TSPoint tp;
-
-TFTButton SwitchModeButton;
-TFTButton NewLayerButton;
-
 uint16_t xpos, ypos;
 
 class clickButton
@@ -45,17 +40,27 @@ class clickButton
     unsigned long debounceDelay = 50;    
 };
 
+//Physical buttons
 clickButton topButton(1);
 clickButton middleButton(3);
 clickButton bottomButton(2);
 clickButton rotaryButton(0);
+
+//PS Menu Buttons
+TFTButton MainMenuButton;
+TFTButton SwitchModeButton;
+TFTButton NewLayerButton;
+
+//Main Menu Buttons
+TFTButton PhotoshopButton;
+TFTButton WindowsButton;
 
 RotaryEncoder encoder(A4, A5);
 
 enum PSInputMode { BrushSize, Zoom };
 PSInputMode CurrentPSInputMode;
 
-enum MenuState { MainMenu, PSMenu, YouTubeMenu };
+enum MenuState { MainMenu, PSMenu, WindowsMenu };
 MenuState CurrentMenuState;
 
 void setup(void)
@@ -109,7 +114,9 @@ void setup(void)
     myScreen.fillRect(320, 0, 32, 32, ALMOST_WHITE); 
 
     myScreen.setFont(&FreeSans12pt7b);
-    
+
+
+    //PS Menu Buttons
     SwitchModeButton.InitButton(&myScreen, 16, 16, 150, 80, 
       DARK_RED,           //OUTLINE COLOUR
       ALMOST_WHITE,       //INTERNAL COLOUR
@@ -119,121 +126,195 @@ void setup(void)
       DARK_RED,
       ALMOST_WHITE,
       DARK_BLUE, "New Layer");
-    
-    NewLayerButton.DrawButton();  
-    SwitchModeButton.DrawButton();
+
+    MainMenuButton.InitButton(&myScreen, 16, 240-32-16, 150, 32,
+      DARK_RED,
+      ALMOST_WHITE,
+      DARK_BLUE, "Main Menu");
+      
+
+    //Main Menu Buttons
+    PhotoshopButton.InitButton(&myScreen, 16, 16, 64,64,
+      LIGHT_BLUE,
+      DARK_BLUE,
+      LIGHT_BLUE,
+      "PS");
+   
+    uint16_t win10Col = GetColor(0, 120, 214);
+
+    WindowsButton.InitButton(&myScreen, 96, 16, 64, 64,
+    GetColor(255,255,255),
+    win10Col,
+    win10Col,
+    "");
+
+    DrawMainMenu();
+
+    //NewLayerButton.DrawButton();
+    //SwitchModeButton.DrawButton();
       
     delay(500);
 }
 
 void loop()
 {
-    static int pos = 0;
-
-    //Top physical button
-    if (UpdatePhysicalButton(topButton) == true)
+    switch (CurrentMenuState)
     {
-        Keyboard.press(KEY_LEFT_CTRL); 
-        Keyboard.press(KEY_LEFT_ALT);         
-        Keyboard.press('z');
-        Keyboard.releaseAll();
-    }
-
-    //Middle physical button
-    if (digitalRead(middleButton.buttonPin) == 0)
-    {
-        Keyboard.press(' ');
-    }
-    else
-    {
-        Keyboard.release(' ');
-    }
-
-    //Bottom physical button
-    if (digitalRead(bottomButton.buttonPin) == 0)
-    {
-        Keyboard.press(KEY_LEFT_ALT);
-    }
-    else   
-    {
-        Keyboard.release(KEY_LEFT_ALT);
-    }
-
-    //New Layer touch button
-    if (UpdateTFTButton(NewLayerButton) == true)
-    {
-        tone(12, 3500,5);
-        Keyboard.press(KEY_LEFT_CTRL); 
-        Keyboard.press(KEY_LEFT_SHIFT);         
-        Keyboard.press('n');
-        Keyboard.press(KEY_RETURN);
-        Keyboard.releaseAll();
-    }
-
-    //Switch Mode touch button
-    if (UpdateTFTButton(SwitchModeButton) == true)
-    {
-        tone(12, 500, 5);
-
-        switch(CurrentPSInputMode)
+        case MainMenu:
         {
-            case BrushSize:
+            if (UpdateTFTButton(PhotoshopButton) == true)
             {
-              CurrentPSInputMode = Zoom;
-              SwitchModeButton.ChangeLabel("Zoom");
-            }
-            break;
+                tone(12, 3500, 5);
+                CurrentMenuState = PSMenu;
 
-            case Zoom:
-            {
-              CurrentPSInputMode = BrushSize;
-              SwitchModeButton.ChangeLabel("Brush Size");
+                DrawPSMenu();
             }
-            break;
+
+            if (UpdateTFTButton(WindowsButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = WindowsMenu;
+                
+                DrawWindowsMenu();
+            }
         }
+        break;
+
+        case WindowsMenu:
+        {
+            if (UpdateTFTButton(MainMenuButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = MainMenu;
+
+                DrawMainMenu();
+            }
+        }
+        break;
+      
+        case PSMenu:
+        {
+            //Top physical button
+            if (UpdatePhysicalButton(topButton) == true)
+            {
+                Keyboard.press(KEY_LEFT_CTRL); 
+                Keyboard.press(KEY_LEFT_ALT);         
+                Keyboard.press('z');
+                Keyboard.releaseAll();
+            }
         
-        SwitchModeButton.DrawButton();      
+            //Middle physical button
+            if (digitalRead(middleButton.buttonPin) == 0)
+            {
+                Keyboard.press(' ');
+            }
+            else
+            {
+                Keyboard.release(' ');
+            }
+        
+            //Bottom physical button
+            if (digitalRead(bottomButton.buttonPin) == 0)
+            {
+                Keyboard.press(KEY_LEFT_ALT);
+            }
+            else   
+            {
+                Keyboard.release(KEY_LEFT_ALT);
+            }
+
+            //Main Menu touch button
+            if (UpdateTFTButton(MainMenuButton) == true)
+            {
+                tone(12, 3500, 5);
+                CurrentMenuState = MainMenu;
+
+                DrawMainMenu();
+            }
+            
+
+            //New Layer touch button
+            if (UpdateTFTButton(NewLayerButton) == true)
+            {
+                tone(12, 3500,5);
+                Keyboard.press(KEY_LEFT_CTRL); 
+                Keyboard.press(KEY_LEFT_SHIFT);         
+                Keyboard.press('n');
+                Keyboard.press(KEY_RETURN);
+                Keyboard.releaseAll();
+            }
+            
+            //Switch Mode touch button
+            if (UpdateTFTButton(SwitchModeButton) == true)
+            {
+                tone(12, 500, 5);
+        
+                switch(CurrentPSInputMode)
+                {
+                    case BrushSize:
+                    {
+                      CurrentPSInputMode = Zoom;
+                      SwitchModeButton.ChangeLabel("Zoom");
+                    }
+                    break;
+        
+                    case Zoom:
+                    {
+                      CurrentPSInputMode = BrushSize;
+                      SwitchModeButton.ChangeLabel("Brush Size");
+                    }
+                    break;
+                }
+                
+                SwitchModeButton.DrawButton();      
+            }
+        }
+        break;
     }
 
     //Rotary encoder
+    static int pos = 0;
     encoder.tick();
     int newPos = encoder.getPosition();
 
     if (pos != newPos) 
-    { 
-        switch(CurrentPSInputMode)
-        {
-            case BrushSize:
-            {                 
-                if (pos > newPos) { Keyboard.print("["); }
-                if (pos < newPos) { Keyboard.print("]"); }
-            }
-            break;
-    
-            case Zoom:
-            { 
-                if (pos > newPos) 
-                { 
-                  Keyboard.press(KEY_LEFT_ALT);
-                  delay(16);
-                  Mouse.move(0,0,-1);
-                  delay(16);
-                  Keyboard.release(KEY_LEFT_ALT);
-                }
-                
-                if (pos < newPos) 
-                { 
-                  Keyboard.press(KEY_LEFT_ALT);
-                  delay(16);
-                  Mouse.move(0,0,1);
-                  delay(16);
-                  Keyboard.release(KEY_LEFT_ALT);
-                }         
-            }
-            break;
-        }
+    {
+      if (CurrentMenuState == PSMenu)
+      {
+          switch(CurrentPSInputMode)
+          {
+              case BrushSize:
+              {                 
+                  if (pos > newPos) { Keyboard.print("["); }
+                  if (pos < newPos) { Keyboard.print("]"); }
+              }
+              break;
+      
+              case Zoom:
+              { 
+                  if (pos > newPos) 
+                  { 
+                    Keyboard.press(KEY_LEFT_ALT);
+                    delay(16);
+                    Mouse.move(0,0,-1);
+                    delay(16);
+                    Keyboard.release(KEY_LEFT_ALT);
+                  }
+                  
+                  if (pos < newPos) 
+                  { 
+                    Keyboard.press(KEY_LEFT_ALT);
+                    delay(16);
+                    Mouse.move(0,0,1);
+                    delay(16);
+                    Keyboard.release(KEY_LEFT_ALT);
+                  }         
+              }
+              break;
+          }
+      }
         
-        pos = newPos;
+      pos = newPos;
     }
 
     //Update touch screen
@@ -246,26 +327,57 @@ void loop()
         xpos = map(tp.y, 950, 180, 0, myScreen.width());
         ypos = map(tp.x, 170, 880, 0, myScreen.height());
 
-        SwitchModeButton.CheckButton(xpos, ypos);
-        NewLayerButton.CheckButton(xpos, ypos);
+        switch (CurrentMenuState)
+        {
+            case MainMenu:
+            {
+                PhotoshopButton.CheckButton(xpos, ypos);
+                WindowsButton.CheckButton(xpos, ypos);
+            }
+            break;
+          
+            case PSMenu:
+            {
+                SwitchModeButton.CheckButton(xpos, ypos);
+                NewLayerButton.CheckButton(xpos, ypos);
+                MainMenuButton.CheckButton(xpos, ypos);                
+            }
+            break;
+
+            case WindowsMenu:
+            {
+                MainMenuButton.CheckButton(xpos, ypos); 
+            }
+            break;
+        }        
     }
     else
     {
-        SwitchModeButton.CheckButton(900, 900);
-        NewLayerButton.CheckButton(900, 900);
+        switch (CurrentMenuState)
+        {
+            case MainMenu:
+            {
+                PhotoshopButton.CheckButton(900, 900);
+                WindowsButton.CheckButton(900, 900);
+            }
+            break;
+          
+            case PSMenu:
+            {
+                SwitchModeButton.CheckButton(900, 900);
+                NewLayerButton.CheckButton(900, 900);
+                MainMenuButton.CheckButton(900, 900);                
+            }
+            break;
+
+            case WindowsMenu:
+            {
+                MainMenuButton.CheckButton(900, 900); 
+            }
+            break;
+        }
     }
 }
-
-void UpdateMainMenu()
-{
-    
-}
-
-void UpdatePhotoshopMenu()
-{
-    
-}
-
 
 bool UpdateTFTButton(TFTButton &tftButton)
 {
@@ -333,5 +445,105 @@ void SetPins()
 uint16_t GetColor(uint8_t r, uint8_t g, uint8_t b) 
 {
     return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+}
+
+void DrawMainMenu()
+{
+    myScreen.fillScreen(GetColor(0,0,0));
+  
+    WindowsButton.DrawButton();
+    PhotoshopButton.DrawButton();
+
+    DrawWindowsLogo(16, 96);
+}
+
+void DrawPSMenu()
+{
+    myScreen.fillScreen(GetColor(0,0,0));
+    NewLayerButton.DrawButton();
+    SwitchModeButton.DrawButton();
+    MainMenuButton.DrawButton();
+}
+
+void DrawWindowsMenu()
+{
+    myScreen.fillScreen(GetColor(0,0,0));
+    MainMenuButton.DrawButton();
+}
+
+void DrawWindowsLogo(int x, int y)
+{
+        //Top left rectangle
+      myScreen.fillTriangle(y+ 10, x+ 15, y+ 10, x+ 30, y+ 28, x+ 13, GetColor(255,255,255));
+      myScreen.fillTriangle(y+ 28, x+ 13, y+ 10, x+ 30, y+ 28, x+ 30, GetColor(255,255,255));
+
+      //Top right rectangle
+      myScreen.fillTriangle(
+      y+ 31, 
+      x+ 12,
+       
+      y+ 31, 
+      x+ 30,
+      
+      y+ 54, 
+      x+ 9, 
+      GetColor(255,255,255));
+      
+      myScreen.fillTriangle(
+      y+ 54, 
+      x+ 9,
+       
+      y+ 54, 
+      x+ 30,
+       
+      y+ 31, 
+      x+ 30, 
+      GetColor(255,255,255));
+
+      //Bottom left rectangle
+      myScreen.fillTriangle(
+      y+ 10, 
+      x+ 33,
+       
+      y+ 10, 
+      x+ 48,
+      
+      y+ 28, 
+      x+ 33, 
+      GetColor(255,255,255));
+      
+      myScreen.fillTriangle(
+      y+ 28, 
+      x+ 33,
+       
+      y+ 10, 
+      x+ 48,
+       
+      y+ 28, 
+      x+ 51, 
+      GetColor(255,255,255));
+
+      //Bottom right rectangle
+      myScreen.fillTriangle(
+      y+ 31, 
+      x+ 33,
+       
+      y+ 54, 
+      x+ 33,
+      
+      y+ 31, 
+      x+ 51, 
+      GetColor(255,255,255));
+      
+      myScreen.fillTriangle(
+      y+ 54, 
+      x+ 33,
+       
+      y+ 31, 
+      x+ 51,
+       
+      y+ 54, 
+      x+ 54, 
+      GetColor(255,255,255));
 }
 

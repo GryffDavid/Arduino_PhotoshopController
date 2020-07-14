@@ -12,6 +12,7 @@
 #define WHITE 0xFFFF
 #define RED 63488
 #define VS_PURPLE 22898
+#define CRM_YEL 65248
 
 #define MINPRESSURE 20
 #define MAXPRESSURE 1000
@@ -92,7 +93,7 @@ void setup(void)
     //Main Menu Btns
     PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
     WindowsBtn.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
-    ChromeBtn.InitButton(&myScreen, 168, 16, 64, 64, WHITE, GetColor(255, 223, 0), WHITE, "");
+    ChromeBtn.InitButton(&myScreen, 168, 16, 64, 64, WHITE, CRM_YEL, WHITE, "");
     YouTubeBtn.InitButton(&myScreen, 248, 16, 64, 64, RED, WHITE, WHITE, "");
 
     DrawMainMenu();      
@@ -113,7 +114,6 @@ void loop()
             {
                 tone(12, 3500, 5);
                 CurrentMenuState = MainMenu;
-
                 DrawMainMenu();
             }
         }
@@ -197,11 +197,7 @@ void loop()
                     Keyboard.press(KEY_LEFT_SHIFT);         
                     Keyboard.press('z');
                     Keyboard.releaseAll();
-                }
-                else
-                {
-                    Keyboard.press(' ');
-                }
+                } else { Keyboard.press(' '); }
             }
             else
             {
@@ -209,14 +205,7 @@ void loop()
             }
         
             //Bottom physical button
-            if (digitalRead(bottomBtn.buttonPin) == 0)
-            {
-                Keyboard.press(KEY_LEFT_ALT);
-            }
-            else   
-            {
-                Keyboard.release(KEY_LEFT_ALT);
-            }            
+            if (digitalRead(bottomBtn.buttonPin) == 0) { Keyboard.press(KEY_LEFT_ALT); } else { Keyboard.release(KEY_LEFT_ALT); }            
 
             //New Layer touch button
             if (UpdateTFTBtn(NewLayerBtn) == true)
@@ -236,18 +225,14 @@ void loop()
         
                 switch(CurrentPSInputMode)
                 {
-                    case BrushSize:
-                    {
+                    case BrushSize:                    
                       CurrentPSInputMode = Zoom;
-                      SwitchModeBtn.ChangeLabel("Zoom");
-                    }
+                      SwitchModeBtn.ChangeLabel("Zoom");                    
                     break;
         
-                    case Zoom:
-                    {
+                    case Zoom:                    
                       CurrentPSInputMode = BrushSize;
-                      SwitchModeBtn.ChangeLabel("Brush Size");
-                    }
+                      SwitchModeBtn.ChangeLabel("Brush Size");                    
                     break;
                 }
                 
@@ -259,24 +244,20 @@ void loop()
             {
                 switch(CurrentBrushState)
                 {
-                    case Brush:
-                    {
-                        tone(12, 500, 10);
-                        Keyboard.print('e');
-                        Keyboard.release('e');
-                        ChangeBrushBtn.ChangeLabel("Eraser");
-                        CurrentBrushState = Eraser;
-                    }
+                    case Brush:                    
+                      tone(12, 500, 10);
+                      Keyboard.print('e');
+                      Keyboard.release('e');
+                      ChangeBrushBtn.ChangeLabel("Eraser");
+                      CurrentBrushState = Eraser;                    
                     break;
         
-                    case Eraser:
-                    {
-                        tone(12, 2500, 5);
-                        Keyboard.print('b');
-                        Keyboard.release('b');
-                        ChangeBrushBtn.ChangeLabel("Brush");
-                        CurrentBrushState = Brush;
-                    }
+                    case Eraser:                    
+                      tone(12, 2500, 5);
+                      Keyboard.print('b');
+                      Keyboard.release('b');
+                      ChangeBrushBtn.ChangeLabel("Brush");
+                      CurrentBrushState = Brush;                    
                     break;
                 }
                 
@@ -293,56 +274,44 @@ void loop()
 
     if (pos != newPos) 
     {
-      if (CurrentMenuState == PSMenu)
+      switch (CurrentMenuState)
       {
+        case PSMenu:
           switch(CurrentPSInputMode)
           {
               case BrushSize:
-              {                 
-                  if (pos > newPos) { Keyboard.print("["); }
-                  if (pos < newPos) { Keyboard.print("]"); }
-              }
+                if (pos > newPos) { Keyboard.print("["); }
+                if (pos < newPos) { Keyboard.print("]"); }
               break;
       
-              case Zoom:
-              { 
-                  if (pos > newPos) 
-                  { 
-                    Keyboard.press(KEY_LEFT_ALT);
-                    delay(16);
-                    Mouse.move(0,0,-1);
-                    delay(16);
-                    Keyboard.release(KEY_LEFT_ALT);
-                  }
-                  
-                  if (pos < newPos) 
-                  { 
-                    Keyboard.press(KEY_LEFT_ALT);
-                    delay(16);
-                    Mouse.move(0,0,1);
-                    delay(16);
-                    Keyboard.release(KEY_LEFT_ALT);
-                  }         
-              }
+              case Zoom:              
+                if (pos > newPos) 
+                { 
+                  Keyboard.press(KEY_LEFT_ALT);
+                  delay(16);
+                  Mouse.move(0,0,-1);
+                  delay(16);
+                  Keyboard.release(KEY_LEFT_ALT);
+                }
+                
+                if (pos < newPos) 
+                { 
+                  Keyboard.press(KEY_LEFT_ALT);
+                  delay(16);
+                  Mouse.move(0,0,1);
+                  delay(16);
+                  Keyboard.release(KEY_LEFT_ALT);
+                }
               break;
           }
-      }
+        break;
 
-      if (CurrentMenuState == WindowsMenu)
-      {
-          if (pos > newPos)
-          {
-              Remote.decrease();
-              Remote.clear(); 
-          }
-
-          if (pos < newPos)
-          {
-              Remote.increase();
-              Remote.clear(); 
-          }
+        case WindowsMenu:
+          if (pos > newPos) { Remote.decrease(); Remote.clear(); }
+          if (pos < newPos) { Remote.increase(); Remote.clear(); }
+        break;
       }
-        
+              
       pos = newPos;
     }
 
@@ -350,8 +319,7 @@ void loop()
     tp = ts.getPoint();
     SetPins(); //This is necessary for the touch screen to work properly
 
-    if (tp.z > MINPRESSURE && 
-        tp.z < MAXPRESSURE) 
+    if (tp.z > MINPRESSURE && tp.z < MAXPRESSURE)
     {
         xpos = map(tp.y, 950, 180, 0, myScreen.width());
         ypos = map(tp.x, 170, 880, 0, myScreen.height());
@@ -494,11 +462,6 @@ void SetPins()
     pinMode(A1, OUTPUT);
     pinMode(6, OUTPUT);
     pinMode(7, OUTPUT);
-}
-
-uint16_t GetColor(uint8_t r, uint8_t g, uint8_t b) 
-{
-    return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
 }
 
 void DrawMainMenu()

@@ -45,6 +45,7 @@ TFTButton MainMenuBtn;
 TFTButton SwitchModeBtn;
 TFTButton NewLayerBtn;
 TFTButton ChangeBrushBtn;
+TFTButton DeselectBtn;
 
 //Main Menu Btns
 TFTButton PhotoshopBtn;
@@ -86,9 +87,10 @@ void setup(void)
     
     //PS Menu Btns
     SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
+    ChangeBrushBtn.InitButton(&myScreen, 16, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush");
     NewLayerBtn.InitButton(&myScreen, 182, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "New Layer");
-    ChangeBrushBtn.InitButton(&myScreen, 16, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush");      
-    
+    DeselectBtn.InitButton(&myScreen, 182, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Deselect");
+        
     //Main Menu Btns
     PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
     WindowsBtn.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
@@ -210,6 +212,14 @@ void loop()
             //Bottom physical button
             if (digitalRead(bottomBtn.buttonPin) == 0) { Keyboard.press(KEY_LEFT_ALT); } else { Keyboard.release(KEY_LEFT_ALT); }            
 
+            if (UpdateTFTBtn(DeselectBtn) == true)
+            {
+                tone(12, 3500,5);
+                Keyboard.press(KEY_LEFT_CTRL);        
+                Keyboard.press('d');
+                Keyboard.releaseAll();
+            }
+
             //New Layer touch button
             if (UpdateTFTBtn(NewLayerBtn) == true)
             {
@@ -230,12 +240,12 @@ void loop()
                 {
                     case BrushSize:                    
                       CurrentPSInputMode = Zoom;
-                      SwitchModeBtn.ChangeLabel("Zoom");                    
+                      //SwitchModeBtn.ChangeLabel("Zoom");                    
                     break;
         
                     case Zoom:                    
                       CurrentPSInputMode = BrushSize;
-                      SwitchModeBtn.ChangeLabel("Brush Size");                    
+                      //SwitchModeBtn.ChangeLabel("Brush Size");                    
                     break;
                 }
                 
@@ -251,7 +261,7 @@ void loop()
                       tone(12, 500, 10);
                       Keyboard.print('e');
                       Keyboard.release('e');
-                      ChangeBrushBtn.ChangeLabel("Eraser");
+                      //ChangeBrushBtn.ChangeLabel("Eraser");
                       CurrentBrushState = Eraser;                    
                     break;
         
@@ -259,7 +269,7 @@ void loop()
                       tone(12, 2500, 5);
                       Keyboard.print('b');
                       Keyboard.release('b');
-                      ChangeBrushBtn.ChangeLabel("Brush");
+                      //ChangeBrushBtn.ChangeLabel("Brush");
                       CurrentBrushState = Brush;                    
                     break;
                 }
@@ -337,11 +347,10 @@ void loop()
             break;
           
             case PSMenu:
-            {
                 SwitchModeBtn.CheckButton(xpos, ypos);
                 NewLayerBtn.CheckButton(xpos, ypos);
-                ChangeBrushBtn.CheckButton(xpos, ypos);                
-            }
+                ChangeBrushBtn.CheckButton(xpos, ypos);
+                DeselectBtn.CheckButton(xpos, ypos);
             break;
 
             case WindowsMenu:
@@ -395,8 +404,9 @@ void loop()
             case PSMenu:
             {
                 SwitchModeBtn.CheckButton(-1, -1);
-                NewLayerBtn.CheckButton(-1, -1); 
-                ChangeBrushBtn.CheckButton(-1, -1);             
+                NewLayerBtn.CheckButton(-1, -1);
+                ChangeBrushBtn.CheckButton(-1, -1);
+                DeselectBtn.CheckButton(-1, -1);
             }
             break;
 
@@ -466,7 +476,7 @@ void SetPins()
 void DrawMainMenu()
 {
     myScreen.fillScreen(BLACK);
-
+  
     WindowsBtn.DrawButton();
     PhotoshopBtn.DrawButton();
     ChromeBtn.DrawButton();
@@ -483,7 +493,8 @@ void DrawPSMenu()
     myScreen.fillScreen(BLACK);
     NewLayerBtn.DrawButton();
     SwitchModeBtn.DrawButton();
-    ChangeBrushBtn.DrawButton();    
+    ChangeBrushBtn.DrawButton();
+    DeselectBtn.DrawButton();
     DrawHamburger(16, 198);
 }
 

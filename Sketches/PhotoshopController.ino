@@ -1,7 +1,7 @@
 #include <TouchScreen.h>
 #include <TFTScreen.h>
 #include <Keyboard.h>
-//#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSans9pt7b.h>
 #include <RotaryEncoder.h>
 #include <Mouse.h>
 
@@ -80,7 +80,7 @@ void setup(void)
     myScreen.begin(37671);
     myScreen.setRotation(1);
     myScreen.fillScreen(BLACK);
-    //myScreen.setFont(&FreeSans9pt7b);
+    myScreen.setFont(&FreeSans9pt7b);
     myScreen.setTextSize(1);
     myScreen.setTextColor(WHITE);
     
@@ -89,16 +89,15 @@ void setup(void)
     //PS Menu Btns
     SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
     ChangeBrushBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush");
-    NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "New Layer");
-    DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "Deselect");
-    TransformBtn.InitButton(&myScreen, 291, 16, 75, 80, WHITE, LIGHT_BLUE, WHITE, "Transform");
-    MarqueeBtn.InitButton(&myScreen, 291, 107, 75, 80, WHITE, LIGHT_BLUE, WHITE, "Transform");
+    NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
+    DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
+    TransformBtn.InitButton(&myScreen, 291, 16, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
+    MarqueeBtn.InitButton(&myScreen, 291, 107, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
     
     //Adjust hue (Ctrl-U)
     //Marquee tool
     //Transform selection (Ctrl-T)
-    
-        
+          
     //Main Menu Btns
     PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
     WindowsBtn.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
@@ -238,6 +237,21 @@ void loop()
                 Keyboard.press(KEY_RETURN);
                 Keyboard.releaseAll();
             }
+
+            if (UpdateTFTBtn(MarqueeBtn) == true)
+            {
+                tone(12, 3500,5);
+                Keyboard.press('m');
+                Keyboard.releaseAll();
+            }
+
+            if (UpdateTFTBtn(TransformBtn) == true)
+            {
+                tone(12, 3500,5);
+                Keyboard.press(KEY_LEFT_CTRL);
+                Keyboard.press('t');
+                Keyboard.releaseAll();
+            }
             
             //Switch Mode touch button
             if (UpdateTFTBtn(SwitchModeBtn) == true)
@@ -359,6 +373,8 @@ void loop()
                 NewLayerBtn.CheckButton(xpos, ypos);
                 ChangeBrushBtn.CheckButton(xpos, ypos);
                 DeselectBtn.CheckButton(xpos, ypos);
+                MarqueeBtn.CheckButton(xpos, ypos);
+                TransformBtn.CheckButton(xpos, ypos);
             break;
 
             case WindowsMenu:
@@ -415,6 +431,8 @@ void loop()
                 NewLayerBtn.CheckButton(-1, -1);
                 ChangeBrushBtn.CheckButton(-1, -1);
                 DeselectBtn.CheckButton(-1, -1);
+                MarqueeBtn.CheckButton(-1, -1);
+                TransformBtn.CheckButton(-1, -1);
             }
             break;
 
@@ -440,13 +458,10 @@ bool UpdateTFTBtn(TFTButton &tftBtn)
     
     if (reading != tftBtn.lastButtonState) { tftBtn.lastDebounceTime = millis(); }
     
-    if ((millis() - tftBtn.lastDebounceTime) > tftBtn.debounceDelay) 
+    if ((millis() - tftBtn.lastDebounceTime) > tftBtn.debounceDelay && reading != tftBtn.buttonState) 
     {
-      if (reading != tftBtn.buttonState) 
-      {
         tftBtn.buttonState = reading;  
-        if (tftBtn.buttonState == LOW) { result = true; }
-      }
+        if (tftBtn.buttonState == LOW) { result = true; }      
     }
     
     tftBtn.lastButtonState = reading;
@@ -460,13 +475,10 @@ bool UpdatePhysicalBtn(cBtn &button)
     
     if (reading != button.lastBtnState) { button.lastDebounceTime = millis(); }
     
-    if ((millis() - button.lastDebounceTime) > button.debounceDelay) 
+    if ((millis() - button.lastDebounceTime) > button.debounceDelay &&reading != button.buttonState) 
     {
-      if (reading != button.buttonState) 
-      {
         button.buttonState = reading;  
-        if (button.buttonState == LOW) { result = true; }
-      }
+        if (button.buttonState == LOW) { result = true; }      
     }
         
     button.lastBtnState = reading;
@@ -505,7 +517,12 @@ void DrawPSMenu()
     DeselectBtn.DrawButton();
     TransformBtn.DrawButton();
     MarqueeBtn.DrawButton();
-    
+
+    DrawNLLogo(196, 22);
+    DrawTrnLogo(294, 22);
+    DrawDeselLogo(196, 112);
+    DrawMarqLogo(298, 112);
+     
     DrawHamburger(16, 198);
 }
 
@@ -584,4 +601,67 @@ void DrawVSLogo(int x, byte y)
     myScreen.fillTriangle(x + 44, y + 11, x + 53, y + 11, x + 53, y + 16, WHITE);
     myScreen.fillTriangle(x + 53, y + 49, x + 53, y + 53, x + 45, y + 53, WHITE);
 }
+
+void DrawNLLogo(int x, int y)
+{
+    myScreen.fillRect(x + 5, y + 5, 54, 33, WHITE);
+    myScreen.fillRect(x + 26, y + 38, 33, 21, WHITE);
+    
+    myScreen.fillTriangle(x + 5, y + 41, x + 22, y + 41, x + 22, y + 58, WHITE);
+}
+
+void DrawTrnLogo(int x, int y)
+{
+    myScreen.fillRect(x + 11, y + 11, 11, 11, WHITE);
+    myScreen.fillRect(x + 11, y + 42, 11, 11, WHITE);
+    myScreen.fillRect(x + 42, y + 11, 11, 11, WHITE);
+    
+    myScreen.fillTriangle(
+    x + 36, y + 33, 
+    x + 57, y + 45, 
+    x + 41, y + 57, WHITE);
+
+    myScreen.drawFastHLine(
+    x + 16, 
+    y + 16, 
+    31,
+    WHITE);
+
+    myScreen.drawFastHLine(
+    x + 16, 
+    y + 47, 
+    31,
+    WHITE);
+
+    myScreen.drawFastVLine(
+    x + 16, 
+    y + 16, 
+    31,
+    WHITE);
+
+    myScreen.drawFastVLine(
+    x + 47, 
+    y + 16, 
+    31,
+    WHITE);
+}
+
+void DrawDeselLogo(int x, int y)
+{
+    myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
+    myScreen.drawLine(x + 11, y + 11, x + 52, y + 52, WHITE);
+    myScreen.drawLine(x + 52, y + 11, x + 11, y + 52, WHITE);
+}
+
+void DrawMarqLogo(int x, int y)
+{
+    myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
+    myScreen.fillRect(x + 6, y + 6, 11, 11, WHITE);
+    myScreen.fillTriangle(
+      x + 52, y + 52, 
+      x + 52, y + 42, 
+      x + 42, y + 52, 
+      WHITE);
+}
+
 

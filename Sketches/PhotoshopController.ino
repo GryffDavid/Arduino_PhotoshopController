@@ -1,7 +1,7 @@
 #include <TouchScreen.h>
 #include <TFTScreen.h>
 #include <Keyboard.h>
-#include <Fonts/FreeSans9pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
 #include <Mouse.h>
 
@@ -80,7 +80,7 @@ void setup(void)
     myScreen.begin(37671);
     myScreen.setRotation(1);
     myScreen.fillScreen(BLACK);
-    myScreen.setFont(&FreeSans9pt7b);
+    myScreen.setFont(&FreeSans12pt7b);
     myScreen.setTextSize(1);
     myScreen.setTextColor(WHITE);
     
@@ -648,14 +648,30 @@ void DrawTrnLogo(int x, int y)
 
 void DrawDeselLogo(int x, int y)
 {
-    myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
-    myScreen.drawLine(x + 11, y + 11, x + 52, y + 52, WHITE);
-    myScreen.drawLine(x + 52, y + 11, x + 11, y + 52, WHITE);
+    for (int xl = 0; xl < 42; xl += 9)
+    {
+        myScreen.drawFastVLine(x + 11, y + 11 + xl, 3, WHITE);
+        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);        
+        myScreen.drawFastHLine(x + 11 + xl, y + 11, 3, WHITE);
+        myScreen.drawFastHLine(x + 11 + xl, y + 53, 3, WHITE);
+    }
+    
+    myScreen.drawLine(x + 16, y + 16, x + 47, y + 47, WHITE);
+    myScreen.drawLine(x + 47, y + 16, x + 16, y + 47, WHITE);
 }
 
 void DrawMarqLogo(int x, int y)
 {
-    myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
+    //myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
+    
+    for (int xl = 0; xl < 42; xl += 9)
+    {
+        myScreen.drawFastVLine(x + 11, y + 11 + xl, 3, WHITE);
+        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);        
+        myScreen.drawFastHLine(x + 11 + xl, y + 11, 3, WHITE);
+        myScreen.drawFastHLine(x + 11 + xl, y + 53, 3, WHITE);
+    }
+    
     myScreen.fillRect(x + 6, y + 6, 11, 11, WHITE);
     myScreen.fillTriangle(
       x + 52, y + 52, 

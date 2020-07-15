@@ -1,9 +1,9 @@
 #include <Keyboard.h>
+#include <Mouse.h>
 #include <TouchScreen.h>
 #include <TFTScreen.h>
-//#include <Fonts/FreeSans12pt7b.h>
+#include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
-#include <Mouse.h>
 
 #define DARK_BLUE 627
 #define LIGHT_BLUE 1599
@@ -31,7 +31,7 @@ class cBtn
     bool buttonState;
     bool lastBtnState;
     unsigned long lastDebounceTime = 0;
-    unsigned long debounceDelay = 50;    
+    unsigned long debounceDelay = 50;
 };
 
 //Physical buttons
@@ -45,6 +45,7 @@ TFTButton ChromeSwitchModeBtn;
 
 //Windows Menu Btns
 TFTButton WindowsSwitchModeBtn;
+TFTButton WindowsPlayBtn;
 
 //PS Menu Btns
 TFTButton MainMenuBtn;
@@ -79,28 +80,29 @@ void setup(void)
     CurrentWindowsState = true;
     
     Serial.begin(9600);
-    myScreen.begin(9600);    
+    myScreen.begin(9600);
     myScreen.reset();
     
     myScreen.begin(37671);
+    myScreen.setRotation(1);
     myScreen.fillScreen(BLACK);
-    myScreen.setRotation(1);    
-    //myScreen.setFont(&FreeSans12pt7b);
+    myScreen.setFont(&FreeSans12pt7b);
     myScreen.setTextSize(1);
     myScreen.setTextColor(WHITE);
 
     pinMode(12, OUTPUT); //Buzzer pin
-    pinMode(topBtn.buttonPin, INPUT);    
+    pinMode(topBtn.buttonPin, INPUT);
     pinMode(middleBtn.buttonPin, INPUT);
     pinMode(bottomBtn.buttonPin, INPUT);
     
-    MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");  
+    MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");
 
     //Chrome Menu Btns
     ChromeSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Tabs");
     
     //Windows Menu Btns   
     WindowsSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Volume");
+    WindowsPlayBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Play");
     
     //PS Menu Btns
     SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
@@ -121,7 +123,7 @@ void setup(void)
     MMBtns[2] = ChromeBtn;
     MMBtns[3] = YouTubeBtn;
     
-    DrawMainMenu();      
+    DrawMainMenu();
     delay(500);
 }
 
@@ -206,7 +208,7 @@ void loop()
           {
               if (UpdatePhysicalBtn(topBtn) == true)
               {
-                  Keyboard.press(KEY_LEFT_CTRL);    
+                  Keyboard.press(KEY_LEFT_CTRL);
                   Keyboard.press('z');
                   Keyboard.releaseAll();
               }
@@ -219,24 +221,31 @@ void loop()
       
               switch(CurrentWindowsState)
               {
-                  case true:                    
+                  case true:
                     CurrentWindowsState = false;
-                    WindowsSwitchModeBtn.ChangeLabel("Window");                    
+                    WindowsSwitchModeBtn.ChangeLabel("Window");
                   break;
       
-                  case false:                    
+                  case false:
                     CurrentWindowsState = true;
-                    WindowsSwitchModeBtn.ChangeLabel("Volume");                    
+                    WindowsSwitchModeBtn.ChangeLabel("Volume");
                   break;
               }
               
-              WindowsSwitchModeBtn.DrawButton();      
+              WindowsSwitchModeBtn.DrawButton();
           }
-                 
+          
+          if (UpdateTFTBtn(WindowsPlayBtn) == true)
+          {
+              tone(12, 500, 5);
+              Remote.play();
+              Remote.clear();
+          }
+          
           if (UpdatePhysicalBtn(rotaryBtn) == true)
           {
-             //Remote.mute();
-             // Remote.clear();
+             Remote.mute();
+             Remote.clear();
           }
       }
       break;
@@ -254,41 +263,43 @@ void loop()
                   Keyboard.releaseAll();
               }
           }
-      
+          
           //-------------Middle physical button---------------------//
           if (digitalRead(middleBtn.buttonPin) == 0)
           {
               if (UpdatePhysicalBtn(topBtn) == true)
               {
                   Keyboard.press(KEY_LEFT_CTRL); 
-                  Keyboard.press(KEY_LEFT_SHIFT);         
+                  Keyboard.press(KEY_LEFT_SHIFT);
                   Keyboard.press('z');
                   Keyboard.releaseAll();
-              } else { Keyboard.press(' '); }
+              } 
+              else
+              { 
+                Keyboard.press(' '); 
+              }
           }
           else
           {
               Keyboard.release(' ');
           }
-      
+          
           //---------------Bottom physical button--------------------//
           if (digitalRead(bottomBtn.buttonPin) == 0) 
           { 
-            Keyboard.press(KEY_LEFT_ALT); 
+              Keyboard.press(KEY_LEFT_ALT); 
           } 
           else 
           { 
-            Keyboard.release(KEY_LEFT_ALT); 
+              Keyboard.release(KEY_LEFT_ALT); 
           }
-
-
           
 
-          //----------------Photoshop Touch Buttons------------------------//            
+          //----------------Photoshop Touch Buttons------------------------//
           if (UpdateTFTBtn(DeselectBtn) == true)
           {
               tone(12, 3500,5);
-              Keyboard.press(KEY_LEFT_CTRL);        
+              Keyboard.press(KEY_LEFT_CTRL);
               Keyboard.press('d');
               Keyboard.releaseAll();
           }
@@ -297,8 +308,8 @@ void loop()
           if (UpdateTFTBtn(NewLayerBtn) == true)
           {
               tone(12, 3500,5);
-              Keyboard.press(KEY_LEFT_CTRL); 
-              Keyboard.press(KEY_LEFT_SHIFT);         
+              Keyboard.press(KEY_LEFT_CTRL);
+              Keyboard.press(KEY_LEFT_SHIFT);
               Keyboard.press('n');
               Keyboard.press(KEY_RETURN);
               Keyboard.releaseAll();
@@ -326,18 +337,18 @@ void loop()
       
               switch(CurrentPSInputMode)
               {
-                  case true:                    
+                  case true:
                     CurrentPSInputMode = false;
-                    SwitchModeBtn.ChangeLabel("Zoom");                    
+                    SwitchModeBtn.ChangeLabel("Zoom");
                   break;
       
-                  case false:                    
+                  case false:
                     CurrentPSInputMode = true;
-                    SwitchModeBtn.ChangeLabel("Brush Size");                    
+                    SwitchModeBtn.ChangeLabel("Brush Size");
                   break;
               }
               
-              SwitchModeBtn.DrawButton();      
+              SwitchModeBtn.DrawButton();
           }
   
           //Change brush mode
@@ -345,24 +356,24 @@ void loop()
           {
               switch(CurrentBrushState)
               {
-                  case true:                    
+                  case true:
                     tone(12, 500, 10);
                     Keyboard.print('e');
                     Keyboard.release('e');
                     ChangeBrushBtn.ChangeLabel("Eraser");
-                    CurrentBrushState = false;                    
+                    CurrentBrushState = false;
                   break;
       
-                  case false:                    
+                  case false:
                     tone(12, 2500, 5);
                     Keyboard.print('b');
                     Keyboard.release('b');
                     ChangeBrushBtn.ChangeLabel("Brush");
-                    CurrentBrushState = true;                    
+                    CurrentBrushState = true;
                   break;
               }
               
-              ChangeBrushBtn.DrawButton();      
+              ChangeBrushBtn.DrawButton();
           }
       }
       break;
@@ -389,20 +400,20 @@ void loop()
               case false:              
                 if (pos > newPos) 
                 { 
-                  Keyboard.press(KEY_LEFT_ALT);
-                  delay(16);
-                  Mouse.move(0,0,-1);
-                  delay(16);
-                  Keyboard.release(KEY_LEFT_ALT);
+                    Keyboard.press(KEY_LEFT_ALT);
+                    delay(16);
+                    Mouse.move(0,0,-1);
+                    delay(16);
+                    Keyboard.release(KEY_LEFT_ALT);
                 }
                 
                 if (pos < newPos) 
                 { 
-                  Keyboard.press(KEY_LEFT_ALT);
-                  delay(16);
-                  Mouse.move(0,0,1);
-                  delay(16);
-                  Keyboard.release(KEY_LEFT_ALT);
+                    Keyboard.press(KEY_LEFT_ALT);
+                    delay(16);
+                    Mouse.move(0,0,1);
+                    delay(16);
+                    Keyboard.release(KEY_LEFT_ALT);
                 }
               break;
           }
@@ -412,8 +423,8 @@ void loop()
         {
           if (CurrentWindowsState == true)
           {
-              //if (pos > newPos) { Remote.decrease(); Remote.clear(); }
-              //if (pos < newPos) { Remote.increase(); Remote.clear(); }
+              if (pos > newPos) { Remote.decrease(); Remote.clear(); }
+              if (pos < newPos) { Remote.increase(); Remote.clear(); }
           }
         }
         break;
@@ -470,11 +481,13 @@ void loop()
 
         switch (CurrentMenuState)
         {
-            case MainMenu:            
-              for (byte i = 0; i < 5; i++)
-              {
-                  MMBtns[i].CheckButton(xpos, ypos);
-              }            
+            case MainMenu:
+            {
+                for (byte i = 0; i < 5; i++)
+                {
+                    MMBtns[i].CheckButton(xpos, ypos);
+                }
+            }
             break;
           
             case PSMenu:
@@ -484,13 +497,14 @@ void loop()
                 ChangeBrushBtn.CheckButton(xpos, ypos);
                 DeselectBtn.CheckButton(xpos, ypos);
                 MarqueeBtn.CheckButton(xpos, ypos);
-                TransformBtn.CheckButton(xpos, ypos);  
-            }              
+                TransformBtn.CheckButton(xpos, ypos);
+            }
             break;
 
             case WindowsMenu:
             {
                 WindowsSwitchModeBtn.CheckButton(xpos, ypos);
+                WindowsPlayBtn.CheckButton(xpos, ypos);
             }
             break;
 
@@ -533,9 +547,9 @@ void loop()
               for (byte i = 0; i < 5; i++)
               {
                   MMBtns[i].CheckButton(-1,-1);
-              }            
+              }
             break;
-          
+            
             case PSMenu:
             {
                 SwitchModeBtn.CheckButton(-1, -1);
@@ -550,6 +564,7 @@ void loop()
             case WindowsMenu:
             {
                 WindowsSwitchModeBtn.CheckButton(-1, -1);
+                WindowsPlayBtn.CheckButton(-1, -1);
             }
             break;
 
@@ -573,8 +588,8 @@ bool UpdateTFTBtn(TFTButton &tftBtn)
     
     if ((millis() - tftBtn.lastDebounceTime) > tftBtn.debounceDelay && reading != tftBtn.buttonState) 
     {
-        tftBtn.buttonState = reading;  
-        if (tftBtn.buttonState == LOW) { result = true; }      
+        tftBtn.buttonState = reading;
+        if (tftBtn.buttonState == LOW) { result = true; }
     }
     
     tftBtn.lastButtonState = reading;
@@ -591,7 +606,7 @@ bool UpdatePhysicalBtn(cBtn &button)
     if ((millis() - button.lastDebounceTime) > button.debounceDelay &&reading != button.buttonState) 
     {
         button.buttonState = reading;  
-        if (button.buttonState == LOW) { result = true; }      
+        if (button.buttonState == LOW) { result = true; }
     }
         
     button.lastBtnState = reading;
@@ -606,8 +621,8 @@ bool UpdatePhysicalBtn(cBtn &button)
 
 void DrawMainMenu()
 {
-    myScreen.fillScreen(BLACK);
-  
+    myScreen.fillRect(16, 16, 384, 182, BLACK);
+    myScreen.fillRect(16, 198, 32, 26, BLACK);
     WindowsBtn.DrawButton();
     PhotoshopBtn.DrawButton();
     ChromeBtn.DrawButton();
@@ -621,7 +636,7 @@ void DrawMainMenu()
 
 void DrawPSMenu()
 {
-    myScreen.fillScreen(BLACK);
+    myScreen.fillRect(0, 0, 400, 91, BLACK);
     NewLayerBtn.DrawButton();
     SwitchModeBtn.DrawButton();
     ChangeBrushBtn.DrawButton();
@@ -639,21 +654,22 @@ void DrawPSMenu()
 
 void DrawWindowsMenu()
 {
-    myScreen.fillScreen(BLACK);
+    myScreen.fillRect(0, 0, 400, 91, BLACK);
     WindowsSwitchModeBtn.DrawButton();
+    WindowsPlayBtn.DrawButton();
     DrawHamburger(16, 198);
 }
 
 void DrawChromeMenu()
 {
-    myScreen.fillScreen(BLACK);
-    ChromeSwitchModeBtn.DrawButton();    
+    myScreen.fillRect(0, 0, 400, 91, BLACK);
+    ChromeSwitchModeBtn.DrawButton();
     DrawHamburger(16, 198);
 }
 
 void DrawYouTubeMenu()
 {
-    myScreen.fillScreen(BLACK);
+    myScreen.fillRect(0, 0, 400, 91, BLACK);
     DrawHamburger(16, 198);
 }
 //------------------------------------------------------------------------------//
@@ -673,20 +689,20 @@ void DrawHamburger(int x, byte y)
 
 void DrawWindowsLogo(int x, byte y)
 {
-        //Top left rectangle
+      //Top left rectangle
       myScreen.fillTriangle(y + 10, x + 15, y + 10, x + 30, y + 28, x + 13, WHITE);
       myScreen.fillTriangle(y + 28, x + 13, y + 10, x + 30, y + 28, x + 30, WHITE);
 
       //Top right rectangle
-      myScreen.fillTriangle(y + 31, x + 12, y + 31, x + 30, y + 54, x + 9, WHITE);      
+      myScreen.fillTriangle(y + 31, x + 12, y + 31, x + 30, y + 54, x + 9, WHITE);
       myScreen.fillTriangle(y + 54, x + 9, y + 54, x + 30, y + 31, x + 30, WHITE);
 
       //Bottom left rectangle
-      myScreen.fillTriangle(y + 10, x + 33, y + 10, x + 48, y + 28, x + 33, WHITE);      
+      myScreen.fillTriangle(y + 10, x + 33, y + 10, x + 48, y + 28, x + 33, WHITE);
       myScreen.fillTriangle(y + 28, x + 33, y + 10, x + 48, y + 28, x + 51, WHITE);
 
       //Bottom right rectangle
-      myScreen.fillTriangle(y + 31, x + 33, y + 54, x + 33, y + 31, x + 51, WHITE);      
+      myScreen.fillTriangle(y + 31, x + 33, y + 54, x + 33, y + 31, x + 51, WHITE);
       myScreen.fillTriangle(y + 54, x + 33, y + 31, x + 51, y + 54, x + 54, WHITE);
 }
 
@@ -711,7 +727,7 @@ void DrawVSLogo(int x, byte y)
 {
     myScreen.drawRect(x, y, 64, 64, VS_PURPLE);
     myScreen.fillRect(x + 1, y + 1, 62, 62, WHITE);
-    myScreen.fillRect(x + 10, y + 11, 43, 42, VS_PURPLE);    
+    myScreen.fillRect(x + 10, y + 11, 43, 42, VS_PURPLE);
     myScreen.fillTriangle(x + 2, y + 2, x + 11, y + 22, x + 41, y + 11, WHITE);
     myScreen.fillTriangle(x + 10, y + 43, x + 10, y + 53, x + 41, y + 53, WHITE);
     myScreen.fillTriangle(x + 16, y + 20, x + 25, y + 28, x + 42, y + 11, WHITE);
@@ -726,7 +742,6 @@ void DrawNLLogo(int x, int y)
 {
     myScreen.fillRect(x + 5, y + 5, 54, 33, WHITE);
     myScreen.fillRect(x + 26, y + 38, 33, 21, WHITE);
-    
     myScreen.fillTriangle(x + 5, y + 41, x + 22, y + 41, x + 22, y + 58, WHITE);
 }
 
@@ -735,35 +750,11 @@ void DrawTrnLogo(int x, int y)
     myScreen.fillRect(x + 11, y + 11, 11, 11, WHITE);
     myScreen.fillRect(x + 11, y + 42, 11, 11, WHITE);
     myScreen.fillRect(x + 42, y + 11, 11, 11, WHITE);
-    
-    myScreen.fillTriangle(
-    x + 36, y + 33, 
-    x + 57, y + 45, 
-    x + 41, y + 57, WHITE);
-
-    myScreen.drawFastHLine(
-    x + 16, 
-    y + 16, 
-    31,
-    WHITE);
-
-    myScreen.drawFastHLine(
-    x + 16, 
-    y + 47, 
-    31,
-    WHITE);
-
-    myScreen.drawFastVLine(
-    x + 16, 
-    y + 16, 
-    31,
-    WHITE);
-
-    myScreen.drawFastVLine(
-    x + 47, 
-    y + 16, 
-    31,
-    WHITE);
+    myScreen.fillTriangle(x + 36, y + 33, x + 57, y + 45, x + 41, y + 57, WHITE);
+    myScreen.drawFastHLine(x + 16, y + 16, 31, WHITE);
+    myScreen.drawFastHLine(x + 16, y + 47, 31, WHITE);
+    myScreen.drawFastVLine(x + 16, y + 16, 31, WHITE);
+    myScreen.drawFastVLine(x + 47, y + 16, 31, WHITE);
 }
 
 void DrawDeselLogo(int x, int y)
@@ -771,7 +762,7 @@ void DrawDeselLogo(int x, int y)
     for (int xl = 0; xl < 42; xl += 9)
     {
         myScreen.drawFastVLine(x + 11, y + 11 + xl, 3, WHITE);
-        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);        
+        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);
         myScreen.drawFastHLine(x + 11 + xl, y + 11, 3, WHITE);
         myScreen.drawFastHLine(x + 11 + xl, y + 53, 3, WHITE);
     }
@@ -782,25 +773,18 @@ void DrawDeselLogo(int x, int y)
 
 void DrawMarqLogo(int x, int y)
 {
-    //myScreen.drawRect(x + 11, y + 11, 42, 42, WHITE);
-    
     for (int xl = 0; xl < 42; xl += 9)
     {
         myScreen.drawFastVLine(x + 11, y + 11 + xl, 3, WHITE);
-        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);        
+        myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);
         myScreen.drawFastHLine(x + 11 + xl, y + 11, 3, WHITE);
         myScreen.drawFastHLine(x + 11 + xl, y + 52, 3, WHITE);
     }
     
     myScreen.fillRect(x + 6, y + 6, 11, 11, WHITE);
-    myScreen.fillTriangle(
-      x + 52, y + 52, 
-      x + 52, y + 42, 
-      x + 42, y + 52, 
-      WHITE);
+    myScreen.fillTriangle(x + 52, y + 52, x + 52, y + 42, x + 42, y + 52, WHITE);
 }
 //-------------------------------------------------------------------------//
-
 
 //Set pins for the touch screen to work correctly
 void SetPins()

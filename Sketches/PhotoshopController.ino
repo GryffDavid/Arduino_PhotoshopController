@@ -1,7 +1,7 @@
 #include <TouchScreen.h>
 #include <TFTScreen.h>
 #include <Keyboard.h>
-#include <Fonts/FreeSans12pt7b.h>
+//#include <Fonts/FreeSans9pt7b.h>
 #include <RotaryEncoder.h>
 #include <Mouse.h>
 
@@ -25,9 +25,9 @@ uint16_t xpos, ypos;
 class cBtn
 {
   public:
-    cBtn(int pin) { buttonPin = pin; }
+    cBtn(byte pin) { buttonPin = pin; }
     
-    int buttonPin;
+    byte buttonPin;
     bool buttonState;
     bool lastBtnState;
     unsigned long lastDebounceTime = 0;
@@ -47,6 +47,7 @@ TFTButton NewLayerBtn;
 TFTButton ChangeBrushBtn;
 TFTButton DeselectBtn;
 TFTButton TransformBtn;
+TFTButton MarqueeBtn;
 
 //Main Menu Btns
 TFTButton PhotoshopBtn;
@@ -58,19 +59,16 @@ TFTButton MMBtns[5];
 
 RotaryEncoder encoder(A4, A5);
 
-enum PSInputMode { BrushSize, Zoom };
-PSInputMode CurrentPSInputMode;
+bool CurrentPSInputMode; //True = Zoom, False = BrushSize
+bool CurrentBrushState; //True = Brush, False = Eraser
 
 enum MenuState { MainMenu, PSMenu, WindowsMenu, ChromeMenu, YouTubeMenu  };
 MenuState CurrentMenuState;
 
-enum BrushState { Brush, Eraser};
-BrushState CurrentBrushState;
-
 void setup(void)
 {
     CurrentMenuState = MainMenu;
-    CurrentPSInputMode = BrushSize;
+    CurrentPSInputMode = true;
     
     Serial.begin(9600);
 
@@ -82,18 +80,19 @@ void setup(void)
     myScreen.begin(37671);
     myScreen.setRotation(1);
     myScreen.fillScreen(BLACK);
-    myScreen.setFont(&FreeSans12pt7b);
+    //myScreen.setFont(&FreeSans9pt7b);
     myScreen.setTextSize(1);
     myScreen.setTextColor(WHITE);
     
     MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");  
     
     //PS Menu Btns
-    SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
-    ChangeBrushBtn.InitButton(&myScreen, 16, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush");
-    NewLayerBtn.InitButton(&myScreen, 182, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "New Layer");
-    DeselectBtn.InitButton(&myScreen, 182, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Deselect");
-    TransformBtn.InitButton(&myScreen, 348, 112, 40, 80, WHITE, LIGHT_BLUE, WHITE, "TSF");
+    SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
+    ChangeBrushBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush");
+    NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "New Layer");
+    DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "Deselect");
+    TransformBtn.InitButton(&myScreen, 291, 16, 75, 80, WHITE, LIGHT_BLUE, WHITE, "Transform");
+    MarqueeBtn.InitButton(&myScreen, 291, 107, 75, 80, WHITE, LIGHT_BLUE, WHITE, "Transform");
     
     //Adjust hue (Ctrl-U)
     //Marquee tool
@@ -247,13 +246,13 @@ void loop()
         
                 switch(CurrentPSInputMode)
                 {
-                    case BrushSize:                    
-                      CurrentPSInputMode = Zoom;
+                    case true:                    
+                      CurrentPSInputMode = false;
                       SwitchModeBtn.ChangeLabel("Zoom");                    
                     break;
         
-                    case Zoom:                    
-                      CurrentPSInputMode = BrushSize;
+                    case false:                    
+                      CurrentPSInputMode = true;
                       SwitchModeBtn.ChangeLabel("Brush Size");                    
                     break;
                 }
@@ -266,20 +265,20 @@ void loop()
             {
                 switch(CurrentBrushState)
                 {
-                    case Brush:                    
+                    case true:                    
                       tone(12, 500, 10);
                       Keyboard.print('e');
                       Keyboard.release('e');
                       ChangeBrushBtn.ChangeLabel("Eraser");
-                      CurrentBrushState = Eraser;                    
+                      CurrentBrushState = false;                    
                     break;
         
-                    case Eraser:                    
+                    case false:                    
                       tone(12, 2500, 5);
                       Keyboard.print('b');
                       Keyboard.release('b');
                       ChangeBrushBtn.ChangeLabel("Brush");
-                      CurrentBrushState = Brush;                    
+                      CurrentBrushState = true;                    
                     break;
                 }
                 
@@ -301,12 +300,12 @@ void loop()
         case PSMenu:
           switch(CurrentPSInputMode)
           {
-              case BrushSize:
+              case true:
                 if (pos > newPos) { Keyboard.print("["); }
                 if (pos < newPos) { Keyboard.print("]"); }
               break;
       
-              case Zoom:              
+              case false:              
                 if (pos > newPos) 
                 { 
                   Keyboard.press(KEY_LEFT_ALT);
@@ -505,6 +504,8 @@ void DrawPSMenu()
     ChangeBrushBtn.DrawButton();
     DeselectBtn.DrawButton();
     TransformBtn.DrawButton();
+    MarqueeBtn.DrawButton();
+    
     DrawHamburger(16, 198);
 }
 

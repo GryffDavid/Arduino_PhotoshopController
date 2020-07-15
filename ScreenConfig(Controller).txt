@@ -1,5 +1,5 @@
-Found Unknown controller LCD driver
-ID=0x9327
+Driver: HX8352B
+ID=0x65
 Screen is 240x400
 Calibration is: 
 LEFT = 880 RT  = 170

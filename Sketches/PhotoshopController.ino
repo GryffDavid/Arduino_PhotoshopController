@@ -40,6 +40,12 @@ cBtn middleBtn(3);
 cBtn bottomBtn(2);
 cBtn rotaryBtn(0);
 
+//Chrome Menu Btns
+TFTButton ChromeSwitchModeBtn;
+
+//Windows Menu Btns
+TFTButton WindowsSwitchModeBtn;
+
 //PS Menu Btns
 TFTButton MainMenuBtn;
 TFTButton SwitchModeBtn;
@@ -61,6 +67,7 @@ RotaryEncoder encoder(A4, A5);
 
 bool CurrentPSInputMode; //True = Zoom, False = BrushSize
 bool CurrentBrushState; //True = Brush, False = Eraser
+bool CurrentWindowsState; //True = Volume, False = Alt-Tab
 
 enum MenuState { MainMenu, PSMenu, WindowsMenu, ChromeMenu, YouTubeMenu  };
 MenuState CurrentMenuState;
@@ -71,20 +78,28 @@ void setup(void)
     CurrentPSInputMode = true;
     
     Serial.begin(9600);
+    myScreen.begin(9600);    
+    myScreen.reset();
+    
+    myScreen.begin(37671);
+    myScreen.fillScreen(BLACK);
+    myScreen.setRotation(1);    
+    myScreen.setFont(&FreeSans12pt7b);
+    myScreen.setTextSize(1);
+    myScreen.setTextColor(WHITE);
 
     pinMode(12, OUTPUT); //Buzzer pin
     pinMode(topBtn.buttonPin, INPUT);    
     pinMode(middleBtn.buttonPin, INPUT);
     pinMode(bottomBtn.buttonPin, INPUT);
     
-    myScreen.begin(37671);
-    myScreen.setRotation(1);
-    myScreen.fillScreen(BLACK);
-    myScreen.setFont(&FreeSans12pt7b);
-    myScreen.setTextSize(1);
-    myScreen.setTextColor(WHITE);
-    
     MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");  
+
+    //Chrome Menu Btns
+    ChromeSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Tabs");
+    
+    //Windows Menu Btns   
+    WindowsSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Volume");
     
     //PS Menu Btns
     SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
@@ -93,11 +108,7 @@ void setup(void)
     DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
     TransformBtn.InitButton(&myScreen, 291, 16, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
     MarqueeBtn.InitButton(&myScreen, 291, 107, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
-    
-    //Adjust hue (Ctrl-U)
-    //Marquee tool
-    //Transform selection (Ctrl-T)
-          
+              
     //Main Menu Btns
     PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
     WindowsBtn.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
@@ -115,7 +126,7 @@ void setup(void)
 
 void loop()
 {
-    //Handle Main Menu Btn on submenus
+///--------------------Handle Main Menu Buttons on submenus----------------------------///
     switch (CurrentMenuState)
     {
         case ChromeMenu:
@@ -132,181 +143,236 @@ void loop()
         }
         break;
     }
+///----------------------------------------------------------------------------------///    
 
-    switch (CurrentMenuState)
-    {      
-        case MainMenu:
-        {
-            for (byte i = 0; i < 5; i++)
-            {
-                if (UpdateTFTBtn(MMBtns[i]) == true)
-                {
-                    tone(12, 3500, 5);
-
-                    switch (i)
-                    {
-                      case 0:
-                        CurrentMenuState = PSMenu;
-                        DrawPSMenu();
-                      break;
-
-                      case 1:
-                        CurrentMenuState = WindowsMenu;
-                        DrawWindowsMenu();
-                      break;
-
-                      case 2:
-                        CurrentMenuState = ChromeMenu;
-                        DrawChromeMenu();
-                      break;
-
-                      case 3:
-                        CurrentMenuState = YouTubeMenu;
-                        DrawYouTubeMenu();
-                      break;
-                    }
-                }
-            }
-        }
-        break;
-        
-        case ChromeMenu:
-        {
-          
-        }
-        break;
-    
-        case WindowsMenu:
-        {
-            if (UpdatePhysicalBtn(rotaryBtn) == true)
-            {
-                Remote.mute();
-                Remote.clear();
-            }
-        }
-        break;
+  switch (CurrentMenuState)
+  {
+      case MainMenu:
+      {
+          for (byte i = 0; i < 5; i++)
+          {
+              if (UpdateTFTBtn(MMBtns[i]) == true)
+              {
+                  tone(12, 3500, 5);
+  
+                  switch (i)
+                  {
+                    case 0:
+                      CurrentMenuState = PSMenu;
+                      DrawPSMenu();
+                    break;
+  
+                    case 1:
+                      CurrentMenuState = WindowsMenu;
+                      DrawWindowsMenu();
+                    break;
+  
+                    case 2:
+                      CurrentMenuState = ChromeMenu;
+                      DrawChromeMenu();
+                    break;
+  
+                    case 3:
+                      CurrentMenuState = YouTubeMenu;
+                      DrawYouTubeMenu();
+                    break;
+                  }
+              }
+          }
+      }
+      break;
       
-        case PSMenu:
-        {
-            //Top physical button
-            if (digitalRead(middleBtn.buttonPin) == 1)
-            {
-                if (UpdatePhysicalBtn(topBtn) == true)
-                {
-                    Keyboard.press(KEY_LEFT_CTRL); 
-                    Keyboard.press(KEY_LEFT_ALT);         
-                    Keyboard.press('z');
-                    Keyboard.releaseAll();
-                }
-            }
+      case ChromeMenu:
+      {
         
-            //Middle physical button
-            if (digitalRead(middleBtn.buttonPin) == 0)
-            {
-                if (UpdatePhysicalBtn(topBtn) == true)
-                {
-                    Keyboard.press(KEY_LEFT_CTRL); 
-                    Keyboard.press(KEY_LEFT_SHIFT);         
-                    Keyboard.press('z');
-                    Keyboard.releaseAll();
-                } else { Keyboard.press(' '); }
-            }
-            else
-            {
-                Keyboard.release(' ');
-            }
-        
-            //Bottom physical button
-            if (digitalRead(bottomBtn.buttonPin) == 0) { Keyboard.press(KEY_LEFT_ALT); } else { Keyboard.release(KEY_LEFT_ALT); }            
+      }
+      break;
 
-            if (UpdateTFTBtn(DeselectBtn) == true)
-            {
-                tone(12, 3500,5);
-                Keyboard.press(KEY_LEFT_CTRL);        
-                Keyboard.press('d');
-                Keyboard.releaseAll();
-            }
+      case YouTubeMenu:
+      {
+          if (UpdatePhysicalBtn(rotaryBtn) == true)
+          {
+              Keyboard.press(' ');    
+              Keyboard.releaseAll();
+          }
+      }
+      break;
+  
+      case WindowsMenu:
+      {
+          //--------------Top physical button-------------------//
+          if (digitalRead(middleBtn.buttonPin) == 1)
+          {
+              if (UpdatePhysicalBtn(topBtn) == true)
+              {
+                  Keyboard.press(KEY_LEFT_CTRL);    
+                  Keyboard.press('z');
+                  Keyboard.releaseAll();
+              }
+          }
+          
+          //Switch Mode touch button
+          if (UpdateTFTBtn(WindowsSwitchModeBtn) == true)
+          {
+              tone(12, 500, 5);
+      
+              switch(CurrentWindowsState)
+              {
+                  case true:                    
+                    CurrentWindowsState = false;
+                    WindowsSwitchModeBtn.ChangeLabel("Window");                    
+                  break;
+      
+                  case false:                    
+                    CurrentWindowsState = true;
+                    WindowsSwitchModeBtn.ChangeLabel("Volume");                    
+                  break;
+              }
+              
+              WindowsSwitchModeBtn.DrawButton();      
+          }
+                 
+          if (UpdatePhysicalBtn(rotaryBtn) == true)
+          {
+              Remote.mute();
+              Remote.clear();
+          }
+      }
+      break;
+    
+      case PSMenu:
+      {
+          //--------------Top physical button-------------------//
+          if (digitalRead(middleBtn.buttonPin) == 1)
+          {
+              if (UpdatePhysicalBtn(topBtn) == true)
+              {
+                  Keyboard.press(KEY_LEFT_CTRL); 
+                  Keyboard.press(KEY_LEFT_ALT);         
+                  Keyboard.press('z');
+                  Keyboard.releaseAll();
+              }
+          }
+      
+          //-------------Middle physical button---------------------//
+          if (digitalRead(middleBtn.buttonPin) == 0)
+          {
+              if (UpdatePhysicalBtn(topBtn) == true)
+              {
+                  Keyboard.press(KEY_LEFT_CTRL); 
+                  Keyboard.press(KEY_LEFT_SHIFT);         
+                  Keyboard.press('z');
+                  Keyboard.releaseAll();
+              } else { Keyboard.press(' '); }
+          }
+          else
+          {
+              Keyboard.release(' ');
+          }
+      
+          //---------------Bottom physical button--------------------//
+          if (digitalRead(bottomBtn.buttonPin) == 0) 
+          { 
+            Keyboard.press(KEY_LEFT_ALT); 
+          } 
+          else 
+          { 
+            Keyboard.release(KEY_LEFT_ALT); 
+          }
 
-            //New Layer touch button
-            if (UpdateTFTBtn(NewLayerBtn) == true)
-            {
-                tone(12, 3500,5);
-                Keyboard.press(KEY_LEFT_CTRL); 
-                Keyboard.press(KEY_LEFT_SHIFT);         
-                Keyboard.press('n');
-                Keyboard.press(KEY_RETURN);
-                Keyboard.releaseAll();
-            }
 
-            if (UpdateTFTBtn(MarqueeBtn) == true)
-            {
-                tone(12, 3500,5);
-                Keyboard.press('m');
-                Keyboard.releaseAll();
-            }
+          
 
-            if (UpdateTFTBtn(TransformBtn) == true)
-            {
-                tone(12, 3500,5);
-                Keyboard.press(KEY_LEFT_CTRL);
-                Keyboard.press('t');
-                Keyboard.releaseAll();
-            }
-            
-            //Switch Mode touch button
-            if (UpdateTFTBtn(SwitchModeBtn) == true)
-            {
-                tone(12, 500, 5);
-        
-                switch(CurrentPSInputMode)
-                {
-                    case true:                    
-                      CurrentPSInputMode = false;
-                      SwitchModeBtn.ChangeLabel("Zoom");                    
-                    break;
-        
-                    case false:                    
-                      CurrentPSInputMode = true;
-                      SwitchModeBtn.ChangeLabel("Brush Size");                    
-                    break;
-                }
-                
-                SwitchModeBtn.DrawButton();      
-            }
-
-            //Change brush mode
-            if (UpdateTFTBtn(ChangeBrushBtn) == true)
-            {
-                switch(CurrentBrushState)
-                {
-                    case true:                    
-                      tone(12, 500, 10);
-                      Keyboard.print('e');
-                      Keyboard.release('e');
-                      ChangeBrushBtn.ChangeLabel("Eraser");
-                      CurrentBrushState = false;                    
-                    break;
-        
-                    case false:                    
-                      tone(12, 2500, 5);
-                      Keyboard.print('b');
-                      Keyboard.release('b');
-                      ChangeBrushBtn.ChangeLabel("Brush");
-                      CurrentBrushState = true;                    
-                    break;
-                }
-                
-                ChangeBrushBtn.DrawButton();      
-            }
-        }
-        break;
-    }
+          //----------------Photoshop Touch Buttons------------------------//            
+          if (UpdateTFTBtn(DeselectBtn) == true)
+          {
+              tone(12, 3500,5);
+              Keyboard.press(KEY_LEFT_CTRL);        
+              Keyboard.press('d');
+              Keyboard.releaseAll();
+          }
+  
+          //New Layer touch button
+          if (UpdateTFTBtn(NewLayerBtn) == true)
+          {
+              tone(12, 3500,5);
+              Keyboard.press(KEY_LEFT_CTRL); 
+              Keyboard.press(KEY_LEFT_SHIFT);         
+              Keyboard.press('n');
+              Keyboard.press(KEY_RETURN);
+              Keyboard.releaseAll();
+          }
+  
+          if (UpdateTFTBtn(MarqueeBtn) == true)
+          {
+              tone(12, 3500,5);
+              Keyboard.press('m');
+              Keyboard.releaseAll();
+          }
+  
+          if (UpdateTFTBtn(TransformBtn) == true)
+          {
+              tone(12, 3500,5);
+              Keyboard.press(KEY_LEFT_CTRL);
+              Keyboard.press('t');
+              Keyboard.releaseAll();
+          }
+          
+          //Switch Mode touch button
+          if (UpdateTFTBtn(SwitchModeBtn) == true)
+          {
+              tone(12, 500, 5);
+      
+              switch(CurrentPSInputMode)
+              {
+                  case true:                    
+                    CurrentPSInputMode = false;
+                    SwitchModeBtn.ChangeLabel("Zoom");                    
+                  break;
+      
+                  case false:                    
+                    CurrentPSInputMode = true;
+                    SwitchModeBtn.ChangeLabel("Brush Size");                    
+                  break;
+              }
+              
+              SwitchModeBtn.DrawButton();      
+          }
+  
+          //Change brush mode
+          if (UpdateTFTBtn(ChangeBrushBtn) == true)
+          {
+              switch(CurrentBrushState)
+              {
+                  case true:                    
+                    tone(12, 500, 10);
+                    Keyboard.print('e');
+                    Keyboard.release('e');
+                    ChangeBrushBtn.ChangeLabel("Eraser");
+                    CurrentBrushState = false;                    
+                  break;
+      
+                  case false:                    
+                    tone(12, 2500, 5);
+                    Keyboard.print('b');
+                    Keyboard.release('b');
+                    ChangeBrushBtn.ChangeLabel("Brush");
+                    CurrentBrushState = true;                    
+                  break;
+              }
+              
+              ChangeBrushBtn.DrawButton();      
+          }
+      }
+      break;
+  }
 
     //Rotary encoder
     static int pos = 0;
     encoder.tick();
     int newPos = encoder.getPosition();
 
+///--------------------------Rotary encoder behaviour-----------------------------///
     if (pos != newPos) 
     {
       switch (CurrentMenuState)
@@ -342,18 +408,60 @@ void loop()
         break;
 
         case WindowsMenu:
-          if (pos > newPos) { Remote.decrease(); Remote.clear(); }
-          if (pos < newPos) { Remote.increase(); Remote.clear(); }
+        {
+          if (CurrentWindowsState == true)
+          {
+              if (pos > newPos) { Remote.decrease(); Remote.clear(); }
+              if (pos < newPos) { Remote.increase(); Remote.clear(); }
+          }
+        }
+        break;
+
+        case YouTubeMenu:
+        {
+            if (pos > newPos) 
+            {
+                Keyboard.press(KEY_LEFT_ARROW);
+                Keyboard.releaseAll();
+            }
+            
+            if (pos < newPos) 
+            {
+                Keyboard.press(KEY_RIGHT_ARROW);
+                Keyboard.releaseAll();
+            }
+        }
+        break;
+
+        case ChromeMenu:
+        {
+            if (pos > newPos) 
+            {
+                Keyboard.press(KEY_LEFT_CTRL);
+                Keyboard.press(KEY_LEFT_SHIFT);
+                Keyboard.press(KEY_TAB);
+                Keyboard.releaseAll();
+            }
+            
+            if (pos < newPos) 
+            {
+                Keyboard.press(KEY_LEFT_CTRL);
+                Keyboard.press(KEY_TAB);
+                Keyboard.releaseAll();
+            }
+        }
         break;
       }
               
       pos = newPos;
     }
+///-----------------------------------------------------------------------------///    
 
     //Update touch screen
     tp = ts.getPoint();
     SetPins(); //This is necessary for the touch screen to work properly
 
+///--------------------------------Touch screen buttons behaviour---------------------------------------///
     if (tp.z > MINPRESSURE && tp.z < MAXPRESSURE)
     {
         xpos = map(tp.y, 950, 180, 0, myScreen.width());
@@ -369,23 +477,25 @@ void loop()
             break;
           
             case PSMenu:
+            {
                 SwitchModeBtn.CheckButton(xpos, ypos);
                 NewLayerBtn.CheckButton(xpos, ypos);
                 ChangeBrushBtn.CheckButton(xpos, ypos);
                 DeselectBtn.CheckButton(xpos, ypos);
                 MarqueeBtn.CheckButton(xpos, ypos);
-                TransformBtn.CheckButton(xpos, ypos);
+                TransformBtn.CheckButton(xpos, ypos);  
+            }              
             break;
 
             case WindowsMenu:
             {
-              
+                WindowsSwitchModeBtn.CheckButton(xpos, ypos);
             }
             break;
 
             case ChromeMenu:
             {
-              
+                ChromeSwitchModeBtn.CheckButton(xpos, ypos);
             }
             break;
         }
@@ -438,19 +548,21 @@ void loop()
 
             case WindowsMenu:
             {
-              
+                WindowsSwitchModeBtn.CheckButton(-1, -1);
             }
             break;
 
             case ChromeMenu:
             {
-                
+                ChromeSwitchModeBtn.CheckButton(-1, -1);
             }
             break;
         }
     }
 }
 
+
+///----------Update Physical and Touch buttons----------///
 bool UpdateTFTBtn(TFTButton &tftBtn)
 {
     int reading = tftBtn.pressed;
@@ -484,14 +596,12 @@ bool UpdatePhysicalBtn(cBtn &button)
     button.lastBtnState = reading;
     return result;
 }
+//---------------------------------------------------------------------------//
 
-void SetPins()
-{
-    pinMode(A2, OUTPUT);
-    pinMode(A1, OUTPUT);
-    pinMode(6, OUTPUT);
-    pinMode(7, OUTPUT);
-}
+
+
+
+///--------------Draw Menus-----------------///
 
 void DrawMainMenu()
 {
@@ -528,13 +638,15 @@ void DrawPSMenu()
 
 void DrawWindowsMenu()
 {
-    myScreen.fillScreen(BLACK);    
+    myScreen.fillScreen(BLACK);
+    WindowsSwitchModeBtn.DrawButton();
     DrawHamburger(16, 198);
 }
 
 void DrawChromeMenu()
 {
-    myScreen.fillScreen(BLACK);    
+    myScreen.fillScreen(BLACK);
+    ChromeSwitchModeBtn.DrawButton();    
     DrawHamburger(16, 198);
 }
 
@@ -543,6 +655,13 @@ void DrawYouTubeMenu()
     myScreen.fillScreen(BLACK);
     DrawHamburger(16, 198);
 }
+//------------------------------------------------------------------------------//
+
+
+
+
+
+///--------------DRAW LOGOS-------------------////
 
 void DrawHamburger(int x, byte y)
 {
@@ -669,7 +788,7 @@ void DrawMarqLogo(int x, int y)
         myScreen.drawFastVLine(x + 11, y + 11 + xl, 3, WHITE);
         myScreen.drawFastVLine(x + 53, y + 11 + xl, 3, WHITE);        
         myScreen.drawFastHLine(x + 11 + xl, y + 11, 3, WHITE);
-        myScreen.drawFastHLine(x + 11 + xl, y + 53, 3, WHITE);
+        myScreen.drawFastHLine(x + 11 + xl, y + 52, 3, WHITE);
     }
     
     myScreen.fillRect(x + 6, y + 6, 11, 11, WHITE);
@@ -679,5 +798,17 @@ void DrawMarqLogo(int x, int y)
       x + 42, y + 52, 
       WHITE);
 }
+//-------------------------------------------------------------------------//
+
+
+//Set pins for the touch screen to work correctly
+void SetPins()
+{
+    pinMode(A2, OUTPUT);
+    pinMode(A1, OUTPUT);
+    pinMode(6, OUTPUT);
+    pinMode(7, OUTPUT);
+}
+
 
 

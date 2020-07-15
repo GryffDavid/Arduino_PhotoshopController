@@ -46,6 +46,7 @@ TFTButton SwitchModeBtn;
 TFTButton NewLayerBtn;
 TFTButton ChangeBrushBtn;
 TFTButton DeselectBtn;
+TFTButton TransformBtn;
 
 //Main Menu Btns
 TFTButton PhotoshopBtn;
@@ -81,7 +82,9 @@ void setup(void)
     myScreen.begin(37671);
     myScreen.setRotation(1);
     myScreen.fillScreen(BLACK);
-    myScreen. setFont(&FreeSans12pt7b);
+    myScreen.setFont(&FreeSans12pt7b);
+    myScreen.setTextSize(1);
+    myScreen.setTextColor(WHITE);
     
     MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");  
     
@@ -90,6 +93,12 @@ void setup(void)
     ChangeBrushBtn.InitButton(&myScreen, 16, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Brush");
     NewLayerBtn.InitButton(&myScreen, 182, 16, 150, 80, WHITE, LIGHT_BLUE, WHITE, "New Layer");
     DeselectBtn.InitButton(&myScreen, 182, 112, 150, 80, WHITE, LIGHT_BLUE, WHITE, "Deselect");
+    TransformBtn.InitButton(&myScreen, 348, 112, 40, 80, WHITE, LIGHT_BLUE, WHITE, "TSF");
+    
+    //Adjust hue (Ctrl-U)
+    //Marquee tool
+    //Transform selection (Ctrl-T)
+    
         
     //Main Menu Btns
     PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
@@ -240,12 +249,12 @@ void loop()
                 {
                     case BrushSize:                    
                       CurrentPSInputMode = Zoom;
-                      //SwitchModeBtn.ChangeLabel("Zoom");                    
+                      SwitchModeBtn.ChangeLabel("Zoom");                    
                     break;
         
                     case Zoom:                    
                       CurrentPSInputMode = BrushSize;
-                      //SwitchModeBtn.ChangeLabel("Brush Size");                    
+                      SwitchModeBtn.ChangeLabel("Brush Size");                    
                     break;
                 }
                 
@@ -261,7 +270,7 @@ void loop()
                       tone(12, 500, 10);
                       Keyboard.print('e');
                       Keyboard.release('e');
-                      //ChangeBrushBtn.ChangeLabel("Eraser");
+                      ChangeBrushBtn.ChangeLabel("Eraser");
                       CurrentBrushState = Eraser;                    
                     break;
         
@@ -269,7 +278,7 @@ void loop()
                       tone(12, 2500, 5);
                       Keyboard.print('b');
                       Keyboard.release('b');
-                      //ChangeBrushBtn.ChangeLabel("Brush");
+                      ChangeBrushBtn.ChangeLabel("Brush");
                       CurrentBrushState = Brush;                    
                     break;
                 }
@@ -495,6 +504,7 @@ void DrawPSMenu()
     SwitchModeBtn.DrawButton();
     ChangeBrushBtn.DrawButton();
     DeselectBtn.DrawButton();
+    TransformBtn.DrawButton();
     DrawHamburger(16, 198);
 }
 
@@ -516,14 +526,14 @@ void DrawYouTubeMenu()
     DrawHamburger(16, 198);
 }
 
-void DrawHamburger(int x, int y)
+void DrawHamburger(int x, byte y)
 {
     myScreen.fillRoundRect(x, y, 32, 6, 2, WHITE);
     myScreen.fillRoundRect(x, y + 10, 32, 6, 2, WHITE);
     myScreen.fillRoundRect(x, y + 20, 32, 6, 2, WHITE);
 }
 
-void DrawWindowsLogo(int x, int y)
+void DrawWindowsLogo(int x, byte y)
 {
         //Top left rectangle
       myScreen.fillTriangle(y + 10, x + 15, y + 10, x + 30, y + 28, x + 13, WHITE);
@@ -542,7 +552,7 @@ void DrawWindowsLogo(int x, int y)
       myScreen.fillTriangle(y + 54, x + 33, y + 31, x + 51, y + 54, x + 54, WHITE);
 }
 
-void DrawChromeLogo(int x, int y)
+void DrawChromeLogo(int x, byte y)
 {
     myScreen.fillCircle(x + 32, y + 32, 23, WHITE);
     myScreen.drawCircle(x + 32, y + 32, 10, BLACK);
@@ -553,13 +563,13 @@ void DrawChromeLogo(int x, int y)
     myScreen.drawLine(x + 39, y + 39, x + 31, y + 55, BLACK);
 }
 
-void DrawYouTubeLogo(int x, int y)
+void DrawYouTubeLogo(int x, byte y)
 {
     myScreen.fillRoundRect(x + 10, y + 17, 48, 32, 3, RED);
     myScreen.fillTriangle(x + 27, y + 25, x + 27, y + 38, x +  39, y + 32, WHITE);
 }
 
-void DrawVSLogo(int x, int y)
+void DrawVSLogo(int x, byte y)
 {
     myScreen.drawRect(x, y, 64, 64, VS_PURPLE);
     myScreen.fillRect(x + 1, y + 1, 62, 62, WHITE);

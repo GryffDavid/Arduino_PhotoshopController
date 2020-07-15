@@ -1,7 +1,7 @@
+#include <Keyboard.h>
 #include <TouchScreen.h>
 #include <TFTScreen.h>
-#include <Keyboard.h>
-#include <Fonts/FreeSans12pt7b.h>
+//#include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
 #include <Mouse.h>
 
@@ -76,6 +76,7 @@ void setup(void)
 {
     CurrentMenuState = MainMenu;
     CurrentPSInputMode = true;
+    CurrentWindowsState = true;
     
     Serial.begin(9600);
     myScreen.begin(9600);    
@@ -84,7 +85,7 @@ void setup(void)
     myScreen.begin(37671);
     myScreen.fillScreen(BLACK);
     myScreen.setRotation(1);    
-    myScreen.setFont(&FreeSans12pt7b);
+    //myScreen.setFont(&FreeSans12pt7b);
     myScreen.setTextSize(1);
     myScreen.setTextColor(WHITE);
 
@@ -234,8 +235,8 @@ void loop()
                  
           if (UpdatePhysicalBtn(rotaryBtn) == true)
           {
-              Remote.mute();
-              Remote.clear();
+             //Remote.mute();
+             // Remote.clear();
           }
       }
       break;
@@ -411,8 +412,8 @@ void loop()
         {
           if (CurrentWindowsState == true)
           {
-              if (pos > newPos) { Remote.decrease(); Remote.clear(); }
-              if (pos < newPos) { Remote.increase(); Remote.clear(); }
+              //if (pos > newPos) { Remote.decrease(); Remote.clear(); }
+              //if (pos < newPos) { Remote.increase(); Remote.clear(); }
           }
         }
         break;

@@ -54,6 +54,8 @@ TFTButton ChangeBrushBtn;
 TFTButton DeselectBtn;
 TFTButton TransformBtn;
 TFTButton MarqueeBtn;
+TFTButton FillButton;
+TFTButton SwapButton;
 
 //Main Menu Btns
 TFTButton PhotoshopBtn;
@@ -65,7 +67,10 @@ TFTButton MMBtns[5];
 
 RotaryEncoder encoder(A4, A5);
 
-bool CurrentPSInputMode; //True = Zoom, False = BrushSize
+//bool CurrentPSInputMode; //True = Zoom, False = BrushSize
+
+enum PSWheelMode { Zoom, BrushSize, Frames };
+PSWheelMode CurrentPSInputMode;
 bool CurrentBrushState; //True = Brush, False = Eraser
 bool CurrentWindowsState; //True = Volume, False = Alt-Tab
 
@@ -79,7 +84,7 @@ unsigned long lastSleepTime = 0;
 void setup(void)
 {
   CurrentMenuState = MainMenu;
-  CurrentPSInputMode = true;
+  CurrentPSInputMode = Zoom;
   CurrentWindowsState = true;
 
   Serial.begin(9600);
@@ -112,8 +117,14 @@ void setup(void)
   ChangeBrushBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush");
   NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
   DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  TransformBtn.InitButton(&myScreen, 291, 16, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  MarqueeBtn.InitButton(&myScreen, 291, 107, 75, 75, WHITE, LIGHT_BLUE, WHITE, "");
+  TransformBtn.InitButton(&myScreen, 291, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
+  MarqueeBtn.InitButton(&myScreen, 291, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
+  FillButton.InitButton(&myScreen, 291, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "FILL");
+  SwapButton.InitButton(&myScreen, 182, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "SWAP");
+  //SWAP COLOURS BUTTON
+  //FILL TOOL BUTTON
+
+  //Ability to swap between the bottom button being Alt and Shift10000
 
   //Main Menu Btns
   PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
@@ -285,11 +296,11 @@ void loop()
         //---------------Bottom physical button--------------------//
         if (digitalRead(bottomBtn.buttonPin) == 0)
         {
-          Keyboard.press(KEY_LEFT_ALT);
+          Keyboard.press(KEY_LEFT_SHIFT);
         }
         else
         {
-          Keyboard.release(KEY_LEFT_ALT);
+          Keyboard.release(KEY_LEFT_SHIFT);
         }
 
 
@@ -299,6 +310,18 @@ void loop()
           Keyboard.press(KEY_LEFT_CTRL);
           Keyboard.press('d');
           Keyboard.releaseAll();
+        }
+
+        if (UpdateTFTBtn(SwapButton) == true)
+        {
+          Keyboard.print('x');
+          Keyboard.release('x');
+        }
+
+        if (UpdateTFTBtn(FillButton) == true)
+        {
+          Keyboard.print('g');
+          Keyboard.release('g');
         }
 
         //New Layer touch button
@@ -329,13 +352,18 @@ void loop()
         {
           switch (CurrentPSInputMode)
           {
-            case true:
-              CurrentPSInputMode = false;
+            case BrushSize:
+              CurrentPSInputMode = Zoom;
               SwitchModeBtn.ChangeLabel("Zoom");
               break;
 
-            case false:
-              CurrentPSInputMode = true;
+            case Zoom:
+              CurrentPSInputMode = Frames;
+              SwitchModeBtn.ChangeLabel("Frames");
+              break;
+
+            case Frames:
+              CurrentPSInputMode = BrushSize;
               SwitchModeBtn.ChangeLabel("Brush Size");
               break;
           }
@@ -385,7 +413,7 @@ void loop()
       case PSMenu:
         switch (CurrentPSInputMode)
         {
-          case true:
+            case BrushSize:
             if (pos > newPos) {
               Keyboard.print("[");
             }
@@ -393,8 +421,21 @@ void loop()
               Keyboard.print("]");
             }
             break;
+          
+          case Frames:
+            if (pos > newPos) {
+              //Keyboard.print("[");
+              Keyboard.press(KEY_F9);
+              Keyboard.release(KEY_F9);
+            }
+            if (pos < newPos) {
+              //Keyboard.print("]");
+              Keyboard.press(KEY_F10);
+              Keyboard.release(KEY_F10);
+            }
+            break;
 
-          case false:
+          case Zoom:
             if (pos > newPos)
             {
               Keyboard.press(KEY_LEFT_ALT);
@@ -501,6 +542,8 @@ void loop()
           DeselectBtn.CheckButton(xpos, ypos);
           MarqueeBtn.CheckButton(xpos, ypos);
           TransformBtn.CheckButton(xpos, ypos);
+          FillButton.CheckButton(xpos, ypos);
+          SwapButton.CheckButton(xpos, ypos);
         }
         break;
 
@@ -561,6 +604,8 @@ void loop()
           DeselectBtn.CheckButton(-1, -1);
           MarqueeBtn.CheckButton(-1, -1);
           TransformBtn.CheckButton(-1, -1);
+          FillButton.CheckButton(-1, -1);
+          SwapButton.CheckButton(-1, -1);
         }
         break;
 
@@ -665,11 +710,13 @@ void DrawPSMenu()
   DeselectBtn.DrawButton();
   TransformBtn.DrawButton();
   MarqueeBtn.DrawButton();
+  FillButton.DrawButton();
+  SwapButton.DrawButton();
 
   DrawNLLogo(196, 22);
-  DrawTrnLogo(294, 22);
+  DrawTrnLogo(294+9, 22);
   DrawDeselLogo(196, 112);
-  DrawMarqLogo(298, 112);
+  DrawMarqLogo(298+9, 112);
 
   DrawHamburger(16, 198);
 }

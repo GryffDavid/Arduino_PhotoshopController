@@ -2,8 +2,8 @@
 #include <Mouse.h>
 #include <TouchScreen.h>
 #include <TFTScreen.h>
-#include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
+#include <Fonts/FreeSans12pt7b.h>
 
 #define DARK_BLUE 627
 #define LIGHT_BLUE 1599
@@ -25,8 +25,7 @@ uint16_t xpos, ypos;
 class cBtn
 {
   public:
-    cBtn(byte pin) { buttonPin = pin; }
-
+    cBtn(byte pin){ buttonPin = pin; }
     byte buttonPin;
     bool buttonState;
     bool lastBtnState;
@@ -38,6 +37,9 @@ class cBtn
 cBtn topBtn(1);
 cBtn middleBtn(2);
 cBtn bottomBtn(0);
+
+//Chrome Menu Btns
+TFTButton ChromeSwitchModeBtn;
 
 //Windows Menu Btns
 TFTButton WindowsSwitchModeBtn;
@@ -58,27 +60,21 @@ TFTButton DelButton;
 //Main Menu Btns
 TFTButton PhotoshopBtn;
 TFTButton WindowsBtn;
-TFTButton OptionsBtn;
+TFTButton ChromeBtn;
+TFTButton YouTubeBtn;
 
-//Options Menu Btns
-TFTButton PSSwitchModeBtn;
-
-TFTButton MMBtns[3];
+TFTButton MMBtns[5];
 
 RotaryEncoder encoder(A4, A5);
 
 //bool CurrentPSInputMode; //True = Zoom, False = BrushSize
 
-enum PSMenuMode { Animate, Draw };
-PSMenuMode CurrentPSMenuMode;
-
 enum PSWheelMode { Zoom, BrushSize, Frames };
 PSWheelMode CurrentPSInputMode;
-
-bool CurrentBrushState; //True = Brush, False = Eraser
+bool CurrentBrushState = true; //True = Brush, False = Eraser
 bool CurrentWindowsState; //True = Volume, False = Alt-Tab
 
-enum MenuState { MainMenu, PSMenu, WindowsMenu, OptionsMenu };
+enum MenuState { MainMenu, PSMenu, WindowsMenu };
 MenuState CurrentMenuState;
 
 //To turn off the display after being idle
@@ -88,18 +84,17 @@ unsigned long lastSleepTime = 0;
 void setup(void)
 {
   CurrentMenuState = MainMenu;
-  CurrentPSInputMode = Zoom;
-  CurrentPSMenuMode = Draw;
+  CurrentPSInputMode = BrushSize;
   CurrentWindowsState = true;
 
   Serial.begin(9600);
   myScreen.begin(9600);
   myScreen.reset();
 
-  myScreen.begin(37671);
-  myScreen.setRotation(1);
-  myScreen.fillScreen(BLACK);
+  myScreen.begin(0x65);
+  myScreen.setRotation(3);
   myScreen.setFont(&FreeSans12pt7b);
+  myScreen.fillScreen(BLACK);
   myScreen.setTextSize(1);
   myScreen.setTextColor(WHITE);
 
@@ -108,36 +103,36 @@ void setup(void)
   pinMode(middleBtn.buttonPin, INPUT);
   pinMode(bottomBtn.buttonPin, INPUT);
 
-  MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, LIGHT_BLUE, WHITE, "");
+  MainMenuBtn.InitButton(&myScreen, 16, 198 , 32, 26, WHITE, BLACK, WHITE, "");
+
+  //Chrome Menu Btns
+  ChromeSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, BLACK, WHITE, "Tabs");
 
   //Windows Menu Btns
-  WindowsSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Volume");
-  WindowsPlayBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Play");
+  WindowsSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, BLACK, WHITE, "Volume");
+  WindowsPlayBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, BLACK, WHITE, "Play");
 
   //PS Menu Btns
-  SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush Size");
-  ChangeBrushBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Brush");
-  NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  TransformBtn.InitButton(&myScreen, 291, 16, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  MarqueeBtn.InitButton(&myScreen, 291, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
-  FillButton.InitButton(&myScreen, 291, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "FILL");
-  SwapButton.InitButton(&myScreen, 182, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "SWAP");
-  DelButton.InitButton(&myScreen, 64, 198, 103, 26, WHITE, LIGHT_BLUE, WHITE, "DEL");
-  
+  SwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, BLACK, WHITE, "Brush Size");
+  ChangeBrushBtn.InitButton(&myScreen, 16, 107, 150, 75, WHITE, BLACK, WHITE, "Brush");
+  NewLayerBtn.InitButton(&myScreen, 182, 16, 93, 75, WHITE, BLACK, WHITE, "");
+  DeselectBtn.InitButton(&myScreen, 182, 107, 93, 75, WHITE, BLACK, WHITE, "");
+  TransformBtn.InitButton(&myScreen, 291, 16, 93, 75, WHITE, BLACK, WHITE, "");
+  MarqueeBtn.InitButton(&myScreen, 291, 107, 93, 75, WHITE, BLACK, WHITE, "");
+  FillButton.InitButton(&myScreen, 291, 198, 93, 26, WHITE, BLACK, WHITE, "FILL");
+  SwapButton.InitButton(&myScreen, 182, 198, 93, 26, WHITE, BLACK, WHITE, "SWAP");
+  DelButton.InitButton(&myScreen, 64, 198, 103, 26, WHITE, BLACK, WHITE, "DEL");
+
   //Ability to swap between the bottom button being Alt and Shift10000
 
   //Main Menu Btns
-  PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE, "Ps");
+  PhotoshopBtn.InitButton(&myScreen, 8, 16, 64, 64, LIGHT_BLUE, DARK_BLUE, LIGHT_BLUE , "Ps");
   WindowsBtn.InitButton(&myScreen, 88, 16, 64, 64, WHITE, win10Col, win10Col, "");
-  OptionsBtn.InitButton(&myScreen, 168, 16, 64, 64, WHITE, RED, WHITE, "");
-
-  //Options Menu Buttons
-  PSSwitchModeBtn.InitButton(&myScreen, 16, 16, 150, 75, WHITE, LIGHT_BLUE, WHITE, "Draw");
+  ChromeBtn.InitButton(&myScreen, 168, 16, 64, 64, WHITE, CRM_YEL, WHITE, "");
+  YouTubeBtn.InitButton(&myScreen, 248, 16, 64, 64, RED, WHITE, WHITE, "");
 
   MMBtns[0] = PhotoshopBtn;
   MMBtns[1] = WindowsBtn;
-  MMBtns[2] = OptionsBtn;
 
   DrawMainMenu();
   delay(500);
@@ -147,15 +142,14 @@ void loop()
 {
   if ((millis() - lastSleepTime) > sleepTime)
   {
-      pinMode(3, HIGH);
+    pinMode(3, HIGH);
   }
-  
+
   ///--------------------Handle Main Menu Buttons on submenus----------------------------///
   switch (CurrentMenuState)
   {
     case WindowsMenu:
     case PSMenu:
-    case OptionsMenu:
       {
         if (UpdateTFTBtn(MainMenuBtn) == true)
         {
@@ -179,17 +173,13 @@ void loop()
             {
               case 0:
                 CurrentMenuState = PSMenu;
+                Serial.println("Touched");
                 DrawPSMenu();
                 break;
 
               case 1:
                 CurrentMenuState = WindowsMenu;
                 DrawWindowsMenu();
-                break;
-
-              case 2:
-                CurrentMenuState = OptionsMenu;
-                DrawOptionsMenu();
                 break;
             }
           }
@@ -231,8 +221,8 @@ void loop()
 
         if (UpdateTFTBtn(WindowsPlayBtn) == true)
         {
-          Remote.play();
-          Remote.clear();
+          //Remote.play();
+          //Remote.clear();
         }
 
         //          if (UpdatePhysicalBtn(rotaryBtn) == true)
@@ -348,17 +338,11 @@ void loop()
               break;
 
             case Zoom:
-              if (CurrentPSMenuMode == Animate)
-              {
-                CurrentPSInputMode = Frames;
-                SwitchModeBtn.ChangeLabel("Frames");
-              }
-              else
-              {
-                CurrentPSInputMode = BrushSize;
-                SwitchModeBtn.ChangeLabel("Brush Size");
-              }
-              break;            
+              //CurrentPSInputMode = Frames;
+              //SwitchModeBtn.ChangeLabel("Frames");
+              CurrentPSInputMode = BrushSize;
+              SwitchModeBtn.ChangeLabel("Brush Size");
+              break;
 
             case Frames:
               CurrentPSInputMode = BrushSize;
@@ -393,26 +377,6 @@ void loop()
         }
       }
       break;
-
-    case OptionsMenu:
-      {
-        if (UpdateTFTBtn(PSSwitchModeBtn) == true)
-        {
-          if (CurrentPSMenuMode == Animate)
-          {
-            PSSwitchModeBtn.ChangeLabel("Draw");   
-            CurrentPSMenuMode = Draw;]                     
-          }
-          else
-          {
-            PSSwitchModeBtn.ChangeLabel("Animate");
-            CurrentPSMenuMode = Animate;                    
-          }
-
-          PSSwitchModeBtn.DrawButton();
-        }
-      }
-      break;
   }
 
   //Rotary encoder
@@ -425,28 +389,32 @@ void loop()
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-    
+
     switch (CurrentMenuState)
     {
       case PSMenu:
         switch (CurrentPSInputMode)
         {
-            case BrushSize:
-            if (pos > newPos) {
+          case BrushSize:
+            if (pos > newPos)
+            {
               Keyboard.print("[");
             }
-            if (pos < newPos) {
+            if (pos < newPos)
+            {
               Keyboard.print("]");
             }
             break;
-          
+
           case Frames:
-            if (pos > newPos) {
+            if (pos > newPos)
+            {
               //Keyboard.print("[");
               Keyboard.press(KEY_F9);
               Keyboard.release(KEY_F9);
             }
-            if (pos < newPos) {
+            if (pos < newPos)
+            {
               //Keyboard.print("]");
               Keyboard.press(KEY_F10);
               Keyboard.release(KEY_F10);
@@ -479,13 +447,16 @@ void loop()
         {
           if (CurrentWindowsState == true)
           {
-            if (pos > newPos) {
-              Remote.decrease();
-              Remote.clear();
+            if (pos > newPos)
+            {
+              //Remote.decrease();
+              //Remote.clear();
             }
-            if (pos < newPos) {
-              Remote.increase();
-              Remote.clear();
+
+            if (pos < newPos)
+            {
+              //Remote.increase();
+              //Remote.clear();
             }
           }
         }
@@ -506,7 +477,8 @@ void loop()
   {
     xpos = map(tp.y, 950, 180, 0, myScreen.width());
     ypos = map(tp.x, 170, 880, 0, myScreen.height());
-
+    //myScreen.fillCircle(xpos, ypos, 3, RED);
+  
     switch (CurrentMenuState)
     {
       case MainMenu:
@@ -538,19 +510,12 @@ void loop()
           WindowsPlayBtn.CheckButton(xpos, ypos);
         }
         break;
-
-        case OptionsMenu:
-        {
-          PSSwitchModeBtn.CheckButton(xpos, ypos);
-        }
-        break;
     }
 
     switch (CurrentMenuState)
     {
       case PSMenu:
       case WindowsMenu:
-      case OptionsMenu:
         {
           MainMenuBtn.CheckButton(xpos, ypos);
         }
@@ -563,7 +528,6 @@ void loop()
     {
       case PSMenu:
       case WindowsMenu:
-      case OptionsMenu:
         {
           MainMenuBtn.CheckButton(-1, -1);
         }
@@ -599,12 +563,6 @@ void loop()
           WindowsPlayBtn.CheckButton(-1, -1);
         }
         break;
-
-        case OptionsMenu:
-        {
-          PSSwitchModeBtn.CheckButton(-1, -1);
-        }
-        break;
     }
   }
 }
@@ -613,10 +571,10 @@ void loop()
 ///----------Update Physical and Touch buttons----------///
 bool UpdateTFTBtn(TFTButton &tftBtn)
 {
-  int reading = tftBtn.pressed;
   bool result = false;
+  int reading = tftBtn.pressed;
 
-  if (reading != tftBtn.lastButtonState) 
+  if (reading != tftBtn.lastButtonState)
   {
     tftBtn.lastDebounceTime = millis();
   }
@@ -625,15 +583,15 @@ bool UpdateTFTBtn(TFTButton &tftBtn)
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-  
+
     tftBtn.buttonState = reading;
-    if (tftBtn.buttonState == LOW) 
+    if (tftBtn.buttonState == LOW)
     {
       tone(12, 3500, 5);
       result = true;
     }
   }
-  
+
   tftBtn.lastButtonState = reading;
   return result;
 }
@@ -643,7 +601,7 @@ bool UpdatePhysicalBtn(cBtn &button)
   int reading = digitalRead(button.buttonPin);
   bool result = false;
 
-  if (reading != button.lastBtnState) 
+  if (reading != button.lastBtnState)
   {
     button.lastDebounceTime = millis();
   }
@@ -652,9 +610,9 @@ bool UpdatePhysicalBtn(cBtn &button)
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-  
+
     button.buttonState = reading;
-    if (button.buttonState == LOW) 
+    if (button.buttonState == LOW)
     {
       result = true;
     }
@@ -672,14 +630,14 @@ bool UpdatePhysicalBtn(cBtn &button)
 
 void DrawMainMenu()
 {
-  myScreen.fillRect(16, 16, 384, 209, BLACK);
-  //myScreen.fillRect(16, 198, 384, 26, RED);
+  myScreen.fillScreen(BLACK);
+  //myScreen.fillRect(16, 16, 384, 182, BLACK);
+  //myScreen.fillRect(16, 198, 32, 26, BLACK);
+  //myScreen.fillRect(48,
   WindowsBtn.DrawButton();
   PhotoshopBtn.DrawButton();
-  OptionsBtn.DrawButton();
 
   DrawWindowsLogo(16, 88);
-  DrawOptLogo(168, 16);
 }
 
 void DrawPSMenu()
@@ -696,9 +654,9 @@ void DrawPSMenu()
   DelButton.DrawButton();
 
   DrawNLLogo(196, 22);
-  DrawTrnLogo(294+9, 22);
+  DrawTrnLogo(294 + 9, 22);
   DrawDeselLogo(196, 112);
-  DrawMarqLogo(298+9, 112);
+  DrawMarqLogo(298 + 9, 112);
 
   DrawHamburger(16, 198);
 }
@@ -711,12 +669,6 @@ void DrawWindowsMenu()
   DrawHamburger(16, 198);
 }
 
-void DrawOptionsMenu()
-{
-  myScreen.fillRect(0, 0, 400, 91, BLACK);
-  PSSwitchModeBtn.DrawButton();
-  DrawHamburger(16, 198);
-}
 //------------------------------------------------------------------------------//
 
 
@@ -797,21 +749,6 @@ void DrawMarqLogo(int x, int y)
   myScreen.fillRect(x + 6, y + 6, 11, 11, WHITE);
   myScreen.fillTriangle(x + 52, y + 52, x + 52, y + 42, x + 42, y + 52, WHITE);
 }
-
-void DrawOptLogo(int x, int y)
-{
-  myScreen.fillRoundRect(x + 8, y + 12, 48, 6, 2, WHITE);
-  myScreen.fillCircle(x + 40, y + 12+3, 8, WHITE);
-  myScreen.fillCircle(x + 40, y + 12+3, 4, RED);
-  
-  myScreen.fillRoundRect(x + 8, y + 28, 48, 6, 2, WHITE);
-  myScreen.fillCircle(x + 20, y + 28+3, 8, WHITE);
-  myScreen.fillCircle(x + 20, y + 28+3, 4, RED);
-  
-  myScreen.fillRoundRect(x + 8, y + 44, 48, 6, 2, WHITE);
-  myScreen.fillCircle(x + 34, y + 44+3, 8, WHITE);
-  myScreen.fillCircle(x + 34, y + 44+3, 4, RED);
-}
 //-------------------------------------------------------------------------//
 
 //Set pins for the touch screen to work correctly
@@ -822,6 +759,3 @@ void SetPins()
   pinMode(6, OUTPUT);
   pinMode(7, OUTPUT);
 }
-
-
-

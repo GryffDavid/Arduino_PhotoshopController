@@ -2,7 +2,7 @@
 #include <Mouse.h>
 #include <TouchScreen.h>
 #include <TFTScreen.h>
-#include <Fonts/FreeSans12pt7b.h>
+//#include <Fonts/FreeSans12pt7b.h>
 #include <RotaryEncoder.h>
 
 #define DARK_BLUE 627
@@ -56,6 +56,7 @@ TFTButton TransformBtn;
 TFTButton MarqueeBtn;
 TFTButton FillButton;
 TFTButton SwapButton;
+TFTButton DelButton;
 
 //Main Menu Btns
 TFTButton PhotoshopBtn;
@@ -91,10 +92,10 @@ void setup(void)
   myScreen.begin(9600);
   myScreen.reset();
 
-  myScreen.begin(37671);
+  myScreen.begin(0x65);
   myScreen.setRotation(1);
   myScreen.fillScreen(BLACK);
-  myScreen.setFont(&FreeSans12pt7b);
+  //myScreen.setFont(&FreeSans12pt7b);
   myScreen.setTextSize(1);
   myScreen.setTextColor(WHITE);
 
@@ -121,9 +122,8 @@ void setup(void)
   MarqueeBtn.InitButton(&myScreen, 291, 107, 93, 75, WHITE, LIGHT_BLUE, WHITE, "");
   FillButton.InitButton(&myScreen, 291, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "FILL");
   SwapButton.InitButton(&myScreen, 182, 198, 93, 26, WHITE, LIGHT_BLUE, WHITE, "SWAP");
-  //SWAP COLOURS BUTTON
-  //FILL TOOL BUTTON
-
+  DelButton.InitButton(&myScreen, 64, 198, 103, 26, WHITE, LIGHT_BLUE, WHITE, "DEL");
+  
   //Ability to swap between the bottom button being Alt and Shift10000
 
   //Main Menu Btns
@@ -245,11 +245,7 @@ void loop()
           WindowsSwitchModeBtn.DrawButton();
         }
 
-        if (UpdateTFTBtn(WindowsPlayBtn) == true)
-        {
-          Remote.play();
-          Remote.clear();
-        }
+   
 
         //          if (UpdatePhysicalBtn(rotaryBtn) == true)
         //          {
@@ -324,6 +320,12 @@ void loop()
           Keyboard.release('g');
         }
 
+        if (UpdateTFTBtn(DelButton) == true)
+        {
+          Keyboard.press(KEY_DELETE);
+          Keyboard.releaseAll();
+        }
+
         //New Layer touch button
         if (UpdateTFTBtn(NewLayerBtn) == true)
         {
@@ -360,6 +362,8 @@ void loop()
             case Zoom:
               CurrentPSInputMode = Frames;
               SwitchModeBtn.ChangeLabel("Frames");
+//              CurrentPSInputMode = BrushSize;
+ //             SwitchModeBtn.ChangeLabel("Brush Size");
               break;
 
             case Frames:
@@ -457,21 +461,6 @@ void loop()
         }
         break;
 
-      case WindowsMenu:
-        {
-          if (CurrentWindowsState == true)
-          {
-            if (pos > newPos) {
-              Remote.decrease();
-              Remote.clear();
-            }
-            if (pos < newPos) {
-              Remote.increase();
-              Remote.clear();
-            }
-          }
-        }
-        break;
 
       case YouTubeMenu:
         {
@@ -544,6 +533,7 @@ void loop()
           TransformBtn.CheckButton(xpos, ypos);
           FillButton.CheckButton(xpos, ypos);
           SwapButton.CheckButton(xpos, ypos);
+          DelButton.CheckButton(xpos, ypos);
         }
         break;
 
@@ -606,6 +596,7 @@ void loop()
           TransformBtn.CheckButton(-1, -1);
           FillButton.CheckButton(-1, -1);
           SwapButton.CheckButton(-1, -1);
+          DelButton.CheckButton(-1, -1);
         }
         break;
 
@@ -712,6 +703,7 @@ void DrawPSMenu()
   MarqueeBtn.DrawButton();
   FillButton.DrawButton();
   SwapButton.DrawButton();
+  DelButton.DrawButton();
 
   DrawNLLogo(196, 22);
   DrawTrnLogo(294+9, 22);
@@ -863,6 +855,3 @@ void SetPins()
   pinMode(6, OUTPUT);
   pinMode(7, OUTPUT);
 }
-
-
-

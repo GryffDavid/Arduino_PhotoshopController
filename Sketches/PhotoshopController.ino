@@ -36,8 +36,8 @@ class cBtn
 
 //Physical buttons
 cBtn topBtn(1);
-cBtn middleBtn(0);
-cBtn bottomBtn(2);
+cBtn middleBtn(2);
+cBtn bottomBtn(0);
 
 //Chrome Menu Btns
 TFTButton ChromeSwitchModeBtn;

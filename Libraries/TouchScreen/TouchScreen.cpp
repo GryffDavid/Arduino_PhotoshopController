@@ -3,7 +3,7 @@
 #include <avr/pgmspace.h>
 #include "TouchScreen.h"
 
-#define NUMSAMPLES 4
+#define NUMSAMPLES 3
 
 TSPoint::TSPoint(void) 
 {
@@ -36,18 +36,14 @@ static void insert_sort(int array[], uint8_t size)
   for (int i = 1; i < size; i++) 
   {
     save = array[i];
-	for (j = i; j >= 1 && save < array[j - 1]; j--)
-	{
-		array[j] = array[j - 1];
-	}
-
+    for (j = i; j >= 1 && save < array[j - 1]; j--)
+      array[j] = array[j - 1];
     array[j] = save; 
   }
 }
 #endif
 
-TSPoint TouchScreen::getPoint(void) 
-{
+TSPoint TouchScreen::getPoint(void) {
   int x, y, z;
   int samples[NUMSAMPLES];
   uint8_t i, valid;
@@ -81,15 +77,19 @@ TSPoint TouchScreen::getPoint(void)
   *portOutputRegister(xp_port) |= xp_pin;
   *portOutputRegister(xm_port) &= ~xm_pin;
    
-   for (i=0; i<NUMSAMPLES; i++) {
+   for (i=0; i<NUMSAMPLES; i++) 
+   {
      samples[i] = analogRead(_yp);
    }
-#if NUMSAMPLES > 2
-   insert_sort(samples, NUMSAMPLES);
-#endif
-#if NUMSAMPLES == 2
-   if (samples[0] != samples[1]) { valid = 0; }
-#endif
+
+	#if NUMSAMPLES > 2
+	   insert_sort(samples, NUMSAMPLES);
+	#endif
+
+	#if NUMSAMPLES == 2
+	   if (samples[0] != samples[1]) { valid = 0; }
+	#endif
+
    x = (1023-samples[NUMSAMPLES/2]);
 
    pinMode(_xp, INPUT);
@@ -102,16 +102,18 @@ TSPoint TouchScreen::getPoint(void)
    //digitalWrite(_yp, HIGH);
    pinMode(_ym, OUTPUT);
   
-   for (i=0; i<NUMSAMPLES; i++) {
+   for (i=0; i<NUMSAMPLES; i++) 
+   {
      samples[i] = analogRead(_xm);
    }
 
-#if NUMSAMPLES > 2
-   insert_sort(samples, NUMSAMPLES);
-#endif
-#if NUMSAMPLES == 2
-   if (samples[0] != samples[1]) { valid = 0; }
-#endif
+	#if NUMSAMPLES > 2
+	   insert_sort(samples, NUMSAMPLES);
+	#endif
+
+	#if NUMSAMPLES == 2
+	   if (samples[0] != samples[1]) { valid = 0; }
+	#endif
 
    y = (1023-samples[NUMSAMPLES/2]);
 
@@ -143,11 +145,14 @@ TSPoint TouchScreen::getPoint(void)
      rtouch /= 1024;
      
      z = rtouch;
-   } else {
+   } 
+   else 
+   {
      z = (1023-(z2-z1));
    }
 
-   if (! valid) {
+   if (! valid) 
+   {
      z = 0;
    }
 

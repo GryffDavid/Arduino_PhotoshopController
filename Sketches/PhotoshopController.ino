@@ -14,7 +14,7 @@
 #define VS_PURPLE 22898
 #define CRM_YEL 65248
 
-#define MINPRESSURE 200
+#define MINPRESSURE 20
 #define MAXPRESSURE 1000
 
 TFTScreen myScreen;
@@ -147,7 +147,6 @@ void loop()
       {
         if (UpdateTFTBtn(MainMenuBtn) == true)
         {
-          tone(12, 3500, 5);
           CurrentMenuState = MainMenu;
           DrawMainMenu();
         }
@@ -164,8 +163,6 @@ void loop()
         {
           if (UpdateTFTBtn(MMBtns[i]) == true)
           {
-            tone(12, 3500, 5);
-
             switch (i)
             {
               case 0:
@@ -221,8 +218,6 @@ void loop()
         //Switch Mode touch button
         if (UpdateTFTBtn(WindowsSwitchModeBtn) == true)
         {
-          tone(12, 500, 5);
-
           switch (CurrentWindowsState)
           {
             case true:
@@ -241,7 +236,6 @@ void loop()
 
         if (UpdateTFTBtn(WindowsPlayBtn) == true)
         {
-          tone(12, 500, 5);
           Remote.play();
           Remote.clear();
         }
@@ -302,7 +296,6 @@ void loop()
         //----------------Photoshop Touch Buttons------------------------//
         if (UpdateTFTBtn(DeselectBtn) == true)
         {
-          tone(12, 3500, 5);
           Keyboard.press(KEY_LEFT_CTRL);
           Keyboard.press('d');
           Keyboard.releaseAll();
@@ -311,7 +304,6 @@ void loop()
         //New Layer touch button
         if (UpdateTFTBtn(NewLayerBtn) == true)
         {
-          tone(12, 3500, 5);
           Keyboard.press(KEY_LEFT_CTRL);
           Keyboard.press(KEY_LEFT_SHIFT);
           Keyboard.press('n');
@@ -321,14 +313,12 @@ void loop()
 
         if (UpdateTFTBtn(MarqueeBtn) == true)
         {
-          tone(12, 3500, 5);
           Keyboard.press('m');
           Keyboard.releaseAll();
         }
 
         if (UpdateTFTBtn(TransformBtn) == true)
         {
-          tone(12, 3500, 5);
           Keyboard.press(KEY_LEFT_CTRL);
           Keyboard.press('t');
           Keyboard.releaseAll();
@@ -337,8 +327,6 @@ void loop()
         //Switch Mode touch button
         if (UpdateTFTBtn(SwitchModeBtn) == true)
         {
-          tone(12, 500, 5);
-
           switch (CurrentPSInputMode)
           {
             case true:
@@ -361,7 +349,6 @@ void loop()
           switch (CurrentBrushState)
           {
             case true:
-              tone(12, 500, 10);
               Keyboard.print('e');
               Keyboard.release('e');
               ChangeBrushBtn.ChangeLabel("Eraser");
@@ -369,7 +356,6 @@ void loop()
               break;
 
             case false:
-              tone(12, 2500, 5);
               Keyboard.print('b');
               Keyboard.release('b');
               ChangeBrushBtn.ChangeLabel("Brush");
@@ -393,7 +379,6 @@ void loop()
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-    Serial.println("Touched!");
     
     switch (CurrentMenuState)
     {
@@ -611,11 +596,11 @@ bool UpdateTFTBtn(TFTButton &tftBtn)
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-    Serial.println("Touched!");
   
     tftBtn.buttonState = reading;
     if (tftBtn.buttonState == LOW) 
     {
+      tone(12, 3500, 5);
       result = true;
     }
   }
@@ -638,7 +623,6 @@ bool UpdatePhysicalBtn(cBtn &button)
   {
     lastSleepTime = millis();
     pinMode(3, LOW);
-    Serial.println("Touched!");
   
     button.buttonState = reading;
     if (button.buttonState == LOW) 
